@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Wallpaper</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background: #f8fafc; color: #0f172a; padding-bottom: 40px; }
+    .top-bar { background: #075E54; color: #fff; height: 60px; padding: 0 16px; display: flex; align-items: center; gap: 16px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+    .title { font-size: 18px; font-weight: 600; }
+    
+    /* WhatsApp जैसा Live Preview + Brightness Card */
+    .preview-wrap { padding: 18px 16px 8px 16px; }
+    .preview-box { position: relative; height: 210px; border-radius: 22px; overflow: hidden; background: #efeae2; box-shadow: 0 8px 24px rgba(0,0,0,0.12); border: 2px solid #e2e8f0; display: flex; flex-direction: column; justify-content: space-between; padding: 14px; }
+    .preview-bg { position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 1; transition: filter 0.1s; }
+    .demo-bubble { position: relative; z-index: 2; padding: 8px 12px; border-radius: 14px; font-size: 12.5px; max-width: 72%; box-shadow: 0 2px 6px rgba(0,0,0,0.12); }
+    .b-left { background: #ffffff; color: #0f172a; align-self: flex-start; }
+    .b-right { background: #d9fdd3; color: #0f172a; align-self: flex-end; }
+
+    /* Brightness Slider Box */
+    .bright-card { background: #ffffff; margin: 12px 16px; padding: 14px 16px; border-radius: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    .bright-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 10px; }
+    input[type="range"] { width: 100%; accent-color: #008069; height: 6px; cursor: pointer; }
+    .apply-btn { width: 100%; margin-top: 12px; padding: 12px; border: none; border-radius: 12px; background: #008069; color: #ffffff; font-weight: 700; font-size: 14px; cursor: pointer; }
+
+    .section { padding: 14px 16px 6px 16px; }
+    .sec-title { font-size: 12.5px; font-weight: 700; color: #008069; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .my-photo-card { background: #ffffff; border: 2px dashed #008069; border-radius: 16px; padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .wall-card { height: 115px; border-radius: 14px; cursor: pointer; position: relative; overflow: hidden; border: 2px solid transparent; display: flex; align-items: flex-end; padding: 8px; }
+    .wall-label { font-size: 11px; font-weight: 700; color: #fff; text-shadow: 0 1px 4px rgba(0,0,0,0.8); }
+    .reset-btn { width: calc(100% - 32px); margin: 18px 16px 0 16px; padding: 13px; border: none; border-radius: 14px; background: #fee2e2; color: #dc2626; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div onclick="window.location.href='for.html'" style="cursor:pointer;display:flex;align-items:center;">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </div>
+    <div class="title">Custom Wallpaper</div>
+  </div>
+
+  <!-- Live Preview Screen -->
+  <div class="preview-wrap">
+    <div class="preview-box">
+      <div class="preview-bg" id="prevBg"></div>
+      <div class="demo-bubble b-left">Hey! How does this wallpaper look?</div>
+      <div class="demo-bubble b-right">Looks super clean and bright! ✨</div>
+    </div>
+  </div>
+
+  <!-- Wallpaper Brightness Control -->
+  <div class="bright-card">
+    <div class="bright-head">
+      <span>☀️ Wallpaper Brightness</span>
+      <span id="brightVal" style="color:#008069;">100%</span>
+    </div>
+    <input type="range" id="brightSlider" min="20" max="100" value="100">
+    <button class="apply-btn" onclick="saveAndApplyWallpaper()">Set Wallpaper</button>
+      <!-- WhatsApp जैसा "Set Wallpaper For" विकल्प डायलॉग -->
+  <div id="wpScopeModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);justify-content:center;align-items:center;padding:24px;z-index:999;">
+    <div style="background:#ffffff;width:100%;max-width:315px;border-radius:22px;padding:22px 20px 16px 20px;box-shadow:0 14px 40px rgba(0,0,0,0.28);">
+      <div style="font-size:17px;color:#0f172a;font-weight:700;margin-bottom:14px;">Set Wallpaper</div>
+      <label style="display:flex;align-items:center;gap:12px;padding:10px 0;font-size:14.5px;color:#1e293b;cursor:pointer;">
+        <input type="radio" name="wpScope" value="this" checked style="width:18px;height:18px;accent-color:#008069;">
+        <span id="thisChatLabel">For this chat</span>
+      </label>
+      <label style="display:flex;align-items:center;gap:12px;padding:10px 0;font-size:14.5px;color:#1e293b;cursor:pointer;">
+        <input type="radio" name="wpScope" value="all" style="width:18px;height:18px;accent-color:#008069;">
+        <span>For all chats</span>
+      </label>
+      <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:18px;">
+        <button onclick="document.getElementById('wpScopeModal').style.display='none'" style="background:none;border:none;color:#008069;font-weight:700;font-size:14px;padding:8px 12px;cursor:pointer;">Cancel</button>
+        <button onclick="confirmWallpaperScope()" style="background:none;border:none;color:#008069;font-weight:700;font-size:14px;padding:8px 12px;cursor:pointer;">OK</button>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  <input type="file" id="galWallInp" accept="image/*" style="display:none;">
+
+  <div class="section">
+    <div class="sec-title">Gallery</div>
+    <div class="my-photo-card" onclick="document.getElementById('galWallInp').click()">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#008069" stroke-width="2.2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#0f172a;">My Photos</div>
+        <div style="font-size:12px;color:#64748b;">Pick any photo from phone gallery</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">Themes & Colors</div>
+    <div class="grid" id="artGrid"></div>
+  </div>
+
+  <button class="reset-btn" onclick="resetChatWall()">Remove Custom Wallpaper</button>
+  <script>
+    const partner = localStorage.getItem("active_chat_user") || "@friend";
+    const wallKey = "cb_wallpaper_" + partner;
+    const brightKey = "cb_wall_bright_" + partner;
+
+    let selectedBg = localStorage.getItem(wallKey) || "#efeae2";
+    let selectedBright = localStorage.getItem(brightKey) || "100";
+
+    const prevBg = document.getElementById("prevBg");
+    const slider = document.getElementById("brightSlider");
+    const bVal = document.getElementById("brightVal");
+
+    function updatePreview() {
+      if (selectedBg.startsWith("data:image")) {
+        prevBg.style.background = "none";
+        prevBg.style.backgroundImage = `url("${selectedBg}")`;
+        prevBg.style.backgroundSize = "cover";
+        prevBg.style.backgroundPosition = "center";
+      } else {
+        prevBg.style.backgroundImage = "none";
+        prevBg.style.background = selectedBg;
+      }
+      prevBg.style.filter = `brightness(${selectedBright}%)`;
+      slider.value = selectedBright;
+      bVal.innerText = selectedBright + "%";
+    }
+    updatePreview();
+
+    slider.oninput = () => {
+      selectedBright = slider.value;
+      updatePreview();
+    };
+
+    const presets = [
+      { name: "WhatsApp Dark", css: "#0b141a" },
+      { name: "Midnight Aurora", css: "linear-gradient(160deg, #0f172a, #1e1b4b, #312e81)" },
+      { name: "Ocean Breeze", css: "linear-gradient(160deg, #0284c7, #0369a1, #0f172a)" },
+      { name: "Emerald Forest", css: "linear-gradient(160deg, #064e3b, #065f46, #047857)" },
+      { name: "Sunset Glow", css: "linear-gradient(160deg, #f97316, #db2777, #4c1d95)" },
+      { name: "Classic Beige", css: "#efeae2" }
+    ];
+
+    const artBox = document.getElementById("artGrid");
+    presets.forEach(w => {
+      const div = document.createElement("div");
+      div.className = "wall-card";
+      div.style.background = w.css;
+      div.innerHTML = `<span class="wall-label">${w.name}</span>`;
+      div.onclick = () => { selectedBg = w.css; updatePreview(); };
+      artBox.appendChild(div);
+    });
+
+    // असली गैलरी फोटो चुनना
+        // असली गैलरी फोटो चुनना और बिना मेमोरी लिमिट के तुरंत सेव करना
+    document.getElementById("galWallInp").onchange = e => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const maxW = 1080;
+          const scale = img.width > maxW ? (maxW / img.width) : 1;
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+
+          selectedBg = canvas.toDataURL("image/jpeg", 0.82);
+          updatePreview();
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    const partnerName = localStorage.getItem("active_chat_name") || "this chat";
+    document.getElementById("thisChatLabel").innerText = "For this chat (" + partnerName + ")";
+
+    function saveAndApplyWallpaper() {
+      document.getElementById("wpScopeModal").style.display = "flex";
+    }
+
+    function confirmWallpaperScope() {
+      const scope = document.querySelector('input[name="wpScope"]:checked').value;
+      if (scope === "all") {
+        localStorage.setItem("cb_wallpaper_global", selectedBg);
+        localStorage.setItem("cb_wall_bright_global", selectedBright);
+        localStorage.removeItem(wallKey);
+        localStorage.removeItem(brightKey);
+      } else {
+        localStorage.setItem(wallKey, selectedBg);
+        localStorage.setItem(brightKey, selectedBright);
+      }
+      window.location.href = "for.html";
+    }
+
+    function resetChatWall() {
+      localStorage.removeItem(wallKey);
+      localStorage.removeItem(brightKey);
+      localStorage.removeItem("cb_wallpaper_global");
+      localStorage.removeItem("cb_wall_bright_global");
+      window.location.href = "for.html";
+    }
+
+    
+  </script>
+    <script src="theme.js"></script>
+     <script src="no_tap.js"></script>
+     <script src="app_global.js"></script>
+
+</body>
+</html>

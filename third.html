@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Chats</title>
+  <style>
+    :root {
+      --primary-grad: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      --accent-color: #2979FF;
+      --bg-color: #f4f7fb;
+      --card-bg: #ffffff;
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ऊपर का हेडर */
+    .top-bar {
+      background: var(--primary-grad);
+      color: white;
+      padding: 20px 20px 25px 20px;
+      border-bottom: 1px solid #f1f5f9;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .app-title {
+      font-size: 24px;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+    }
+
+    .user-tag {
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 3px;
+      display: inline-block;
+    }
+
+    .theme-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* सर्च बार */
+    .search-box {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 14px;
+      padding: 10px 15px;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-box input {
+      border: none;
+      outline: none;
+      width: 100%;
+      font-size: 15px;
+      color: #1e293b;
+      background: transparent;
+      margin-left: 8px;
+    }
+
+    /* चैट लिस्ट */
+    .chat-list {
+      padding: 20px 15px;
+      flex: 1;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: var(--text-sub);
+      margin-bottom: 12px;
+      padding-left: 5px;
+      text-transform: uppercase;
+    }
+
+    .chat-item {
+      background: var(--card-bg);
+      padding: 14px;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: transform 0.15s;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .chat-item:active {
+      transform: scale(0.98);
+    }
+
+    .avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 16px;
+      background: var(--primary-grad);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .chat-info {
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .chat-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .chat-name {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--text-main);
+    }
+
+    .chat-time {
+      font-size: 12px;
+      color: var(--text-sub);
+    }
+
+    .chat-msg {
+      font-size: 13px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .badge {
+      background: var(--accent-color);
+      color: white;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 3px 8px;
+      border-radius: 10px;
+      margin-left: 8px;
+    }
+
+    /* नया चैट बटन (Floating Button) */
+    .fab {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      width: 58px;
+      height: 58px;
+      border-radius: 18px;
+      background: var(--primary-grad);
+      color: white;
+      border: none;
+      font-size: 28px;
+      box-shadow: 0 8px 20px rgba(41, 121, 255, 0.35);
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+        .fab {
+      bottom: 108px !important; /* प्लस बटन को टैब बार से ऊपर रखने के लिए */
+    }
+    /* ऊपर के गोल आइकन बटन */
+    .icon-circle-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.22);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 18px;
+      text-decoration: none;
+      cursor: pointer;
+      backdrop-filter: blur(5px);
+      transition: transform 0.15s;
+    }
+
+    .icon-circle-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* बीच वाली कैप्सूल (Pill) पट्टी */
+    .quick-pills {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .pill-link {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: white;
+      padding: 7px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .pill-link:active {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+
+  </style>
+</head>
+<body>
+
+</style>
+
+  <!-- हेडर और सर्च -->
+    <!-- नया और साफ-सुथरा हेडर -->
+  <div class="top-bar">
+    <div class="header-row">
+     
+        <div style="display:flex; align-items:center; gap:12px;">
+          <a href="profile.html" class="my-dp" style="width:44px; height:44px; border-radius:15px; background:rgba(255,255,255,0.25); border:2px solid rgba(255,255,255,0.6); color:white; font-weight:bold; font-size:18px; display:flex; align-items:center; justify-content:center; text-decoration:none; overflow:hidden; flex-shrink:0;">U</a>
+          <div>
+            <div class="app-title">ChatBox</div>
+            <div class="user-tag" id="displayUser">@guest_user</div>
+          </div>
+        </div>
+
+      <!-- दाईं तरफ सिर्फ 2 गोल बटन -->
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <a href="notifications.html" class="icon-circle-btn" title="Notifications">🔔</a>
+        <button class="icon-circle-btn" onclick="changeTheme()" title="Change Theme">🎨</button>
+      </div>
+    </div>
+
+    <!-- बीच में सुंदर कैप्सूल बटन -->
+    <div class="quick-pills">
+      <a href="groups.html" class="pill-link">👥 Groups</a>
+      <a href="ai.html" class="pill-link">✨ Smart AI</a>
+      <a href="stickers.html" class="pill-link">🎭 Stickers</a>
+      <a href="game.html" class="pill-link">🎮 Games</a>
+<a href="polls.html" class="pill-link">📊 Polls</a>
+    </div>
+
+    <!-- सर्च बार -->
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" id="searchInput" onkeyup="filterChats()" placeholder="Search by @username or name...">
+    </div>
+
+  </div>
+
+
+  <!-- चैट लिस्ट -->
+  <div class="chat-list" id="chatContainer">
+    <div class="section-label">Direct Messages</div>
+
+
+  </div>
+
+  <!-- नया यूजरनेम खोजने का बटन -->
+  <a href="invite.html" style="position:fixed; bottom:92px; right:20px; width:58px; height:58px; border-radius:20px; background:var(--primary-grad, linear-gradient(135deg,#00d2ff,#2979FF)); color:white; text-decoration:none; font-size:30px; font-weight:bold; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 25px rgba(41,121,255,0.38); z-index:800;">+</a>
+
+    <!-- नीचे का नेविगेशन बार -->
+  
+
+
+  <script>
+    // दूसरी स्क्रीन से सेव किया गया यूजरनेम दिखाना
+    window.onload = function() {
+      const savedName = localStorage.getItem("chatbox_name");
+      const savedUser = localStorage.getItem("chatbox_username");
+      if (savedUser) {
+        document.getElementById("displayUser").innerText = savedName + " (@" + savedUser + ")";
+      }
+    };
+
+    // कस्टम थीम बदलने का फंक्शन
+  let themeIndex = parseInt(localStorage.getItem("chatbox_theme_idx") || "0");
+    const themes = [
+      { grad: "linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%)", accent: "#2979FF", bg: "#f4f7fb", card: "#ffffff", text: "#1e293b" },
+      { grad: "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)", accent: "#8E2DE2", bg: "#f5f3ff", card: "#ffffff", text: "#1e293b" },
+      { grad: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)", accent: "#11998e", bg: "#f0fdf4", card: "#ffffff", text: "#1e293b" },
+      { grad: "linear-gradient(135deg, #0f172a 0%, #334155 100%)", accent: "#38bdf8", bg: "#0f172a", card: "#1e293b", text: "#f8fafc" } // Dark Mode
+    ];
+function applySavedTheme() {
+  const t = themes[themeIndex] || themes[0];
+  document.documentElement.style.setProperty('--primary-grad', t.grad);
+  document.documentElement.style.setProperty('--accent-color', t.accent);
+  document.documentElement.style.setProperty('--bg-color', t.bg);
+  document.documentElement.style.setProperty('--card-bg', t.card);
+  document.documentElement.style.setProperty('--text-main', t.text);
+}
+applySavedTheme();
+
+    function changeTheme() {
+      themeIndex = (themeIndex + 1) % themes.length;
+      const t = themes[themeIndex];
+      document.documentElement.style.setProperty('--primary-grad', t.grad);
+      document.documentElement.style.setProperty('--accent-color', t.accent);
+      document.documentElement.style.setProperty('--bg-color', t.bg);
+      document.documentElement.style.setProperty('--card-bg', t.card);
+      document.documentElement.style.setProperty('--text-main', t.text);
+        localStorage.setItem("chatbox_theme_idx", themeIndex);
+  location.reload();
+
+    }
+
+    // सर्च बार से चैट फिल्टर करना
+    function filterChats() {
+      const query = document.getElementById("searchInput").value.toLowerCase();
+      const items = document.getElementsByClassName("chat-item");
+      for (let item of items) {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(query) ? "flex" : "none";
+      }
+    }
+
+    // चैट खोलना (अगली स्क्रीन chat.html के लिए)
+    function openChat(name, username) {
+      localStorage.setItem("active_chat_name", name);
+      localStorage.setItem("active_chat_user", username);
+      window.location.assign("for.html");
+    }
+
+    // लॉक की हुई चैट खोलना
+        function openLockedChat(name, username) {
+      const pin = prompt("Enter 4-digit Chat Lock PIN (Default: 1234):");
+      const savedPin = localStorage.getItem("chatbox_pin") || "1234";
+      if (pin === savedPin) {
+        openChat(name, username);
+      } else if (pin !== null) {
+        alert("Wrong PIN! Access Denied.");
+      }
+    }
+
+
+    // नए यूजरनेम से चैट शुरू करना
+    function addNewUser() {
+      const newUsername = prompt("Enter friend's @username to start chatting:");
+      if (newUsername && newUsername.trim() !== "") {
+        openChat(newUsername.replace("@", ""), newUsername);
+      }
+    }
+
+
+  
+  </script>
+  <script src="nav.js"></script>
+  <script src="live.js?v=2"></script>
+  
+    <style>
+    .wa-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; background: var(--card-bg, #ffffff);
+      border-bottom: 1px solid var(--border-col, #f1f5f9);
+      cursor: pointer; transition: background 0.15s;
+    }
+    .wa-row:active { background: rgba(0, 0, 0, 0.05); }
+    .wa-av {
+      width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+      background: var(--primary-grad, linear-gradient(135deg, #00F5D4, #2979FF));
+      color: #ffffff; font-size: 20px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .wa-mid { flex: 1; min-width: 0; margin: 0 12px; }
+    .wa-name { font-size: 16px; font-weight: 700; color: var(--text-main, #0f172a); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wa-sub { font-size: 13.5px; color: var(--text-sub, #64748b); margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .wa-time { font-size: 11.5px; font-weight: 600; color: var(--text-sub, #64748b); align-self: flex-start; margin-top: 3px; flex-shrink: 0; }
+  </style>
+
+    
+    <div id="waTopBar" style="display:none;position:fixed;top:0;left:0;right:0;height:62px;background:var(--primary-grad,#008069);color:#fff;z-index:9999;align-items:center;justify-content:space-between;padding:0 12px;box-shadow:0 4px 14px rgba(0,0,0,0.18);">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button type="button" onclick="waCloseBar()" style="background:none;border:none;color:#fff;padding:6px;display:flex;align-items:center;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </button>
+      <b style="font-size:19px;">1</b>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <button type="button" onclick="waPin()" style="background:none;border:none;color:#fff;padding:6px;display:flex;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+      </button>
+      <button type="button" onclick="document.getElementById('waDelTitle').innerText='Delete chat with '+waSelName+'?';document.getElementById('waDelBox').style.display='flex';" style="background:none;border:none;color:#fff;padding:6px;display:flex;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+      </button>
+      <button type="button" onclick="waMute()" style="background:none;border:none;color:#fff;padding:6px;display:flex;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+      </button>
+      <button type="button" onclick="waArchive()" style="background:none;border:none;color:#fff;padding:6px;display:flex;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="12" y1="11" x2="12" y2="17"/><polyline points="9 14 12 17 15 14"/></svg>
+      </button>
+      <button type="button" onclick="const m=document.getElementById('waMoreMenu');m.style.display=m.style.display==='block'?'none':'block';" style="background:none;border:none;color:#fff;padding:6px;display:flex;align-items:center;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="waMoreMenu" style="display:none;position:fixed;top:56px;right:12px;width:185px;background:var(--card-bg,#fff);border-radius:14px;box-shadow:0 8px 24px rgba(0,0,0,0.2);z-index:10000;padding:6px 0;">
+    <div onclick="waToggleUnread()" style="padding:12px 16px;font-size:14.5px;color:var(--text-main,#0f172a);">Mark as unread</div>
+    <div onclick="localStorage.setItem('active_chat_name',waSelName);localStorage.setItem('active_chat_user',waSel);window.location.href='for.html';" style="padding:12px 16px;font-size:14.5px;color:var(--text-main,#0f172a);">View contact</div>
+  </div>
+
+  <div id="waDelBox" onclick="if(event.target===this)this.style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:10001;align-items:center;justify-content:center;padding:24px;">
+    <div style="width:100%;max-width:320px;background:var(--card-bg,#fff);border-radius:20px;padding:20px;">
+      <div id="waDelTitle" style="font-size:16px;font-weight:700;color:var(--text-main,#0f172a);">Delete this chat?</div>
+      <div style="font-size:13.5px;color:var(--text-sub,#64748b);margin-top:8px;">Messages in this chat will be permanently deleted.</div>
+      <div style="display:flex;justify-content:flex-end;gap:14px;margin-top:18px;">
+        <button type="button" onclick="document.getElementById('waDelBox').style.display='none'" style="background:none;border:none;color:#008069;font-weight:700;font-size:14px;padding:8px;">Cancel</button>
+        <button type="button" onclick="waDel()" style="background:none;border:none;color:#ef4444;font-weight:700;font-size:14px;padding:8px;">Delete chat</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    let waTimer = null, waSel = "", waSelName = "";
+    const svgPinSm = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>`;
+    const svgMuteSm = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`;
+
+    function waOpen(u, n) { waSel = u; waSelName = n; document.getElementById("waTopBar").style.display = "flex"; renderWA(); }
+    function waCloseBar() { waSel = ""; waSelName = ""; document.getElementById("waTopBar").style.display = "none"; document.getElementById("waMoreMenu").style.display = "none"; renderWA(); }
+
+    function waPin() {
+      let p = JSON.parse(localStorage.getItem("cb_pinned_chats") || "[]");
+      p = p.includes(waSel) ? p.filter(x => x !== waSel) : [waSel, ...p];
+      localStorage.setItem("cb_pinned_chats", JSON.stringify(p)); waCloseBar();
+    }
+    function waMute() {
+      let m = JSON.parse(localStorage.getItem("cb_muted_chats") || "[]");
+      m = m.includes(waSel) ? m.filter(x => x !== waSel) : [waSel, ...m];
+      localStorage.setItem("cb_muted_chats", JSON.stringify(m)); waCloseBar();
+    }
+    function waArchive() {
+      let a = JSON.parse(localStorage.getItem("cb_archived_chats") || "[]");
+      if (!a.includes(waSel)) a.push(waSel);
+      localStorage.setItem("cb_archived_chats", JSON.stringify(a)); waCloseBar();
+    }
+    function waToggleUnread() {
+      let u = JSON.parse(localStorage.getItem("cb_unread_chats") || "[]");
+      u = u.includes(waSel) ? u.filter(x => x !== waSel) : [waSel, ...u];
+      localStorage.setItem("cb_unread_chats", JSON.stringify(u)); waCloseBar();
+    }
+    function waDel() {
+      const c = waSel.replace("@", "").toLowerCase();
+      localStorage.setItem("cb_direct_friends", JSON.stringify(JSON.parse(localStorage.getItem("cb_direct_friends") || "[]").filter(d => String(d.username).toLowerCase().replace("@", "") !== c)));
+      localStorage.setItem("chatbox_accepted_friends", JSON.stringify(JSON.parse(localStorage.getItem("chatbox_accepted_friends") || "[]").filter(u => String(u).toLowerCase().replace("@", "") !== c)));
+      localStorage.removeItem("cb_saved_chat_" + waSel);
+      localStorage.removeItem("cb_latest_msg_" + c);
+      document.getElementById("waDelBox").style.display = "none"; waCloseBar();
+    }
+
+    function renderWA() {
+      const box = document.getElementById("chatContainer");
+      if (!box) return;
+      const dir = JSON.parse(localStorage.getItem("cb_direct_friends") || "[]");
+      const acc = JSON.parse(localStorage.getItem("chatbox_accepted_friends") || "[]");
+      const pin = JSON.parse(localStorage.getItem("cb_pinned_chats") || "[]");
+      const mut = JSON.parse(localStorage.getItem("cb_muted_chats") || "[]");
+      const arc = JSON.parse(localStorage.getItem("cb_archived_chats") || "[]");
+      const unr = JSON.parse(localStorage.getItem("cb_unread_chats") || "[]");
+
+      const map = new Map();
+      dir.forEach(d => { if (d && d.username && !arc.includes(d.username)) map.set(d.username.toLowerCase(), { name: d.name, user: d.username }); });
+      acc.forEach(u => { const c = u.replace("@", "").toLowerCase(); const fu = "@" + c; if (!map.has(fu) && !arc.includes(fu)) map.set(fu, { name: c.charAt(0).toUpperCase() + c.slice(1), user: fu }); });
+
+      if (map.size === 0) { box.innerHTML = `<div style="text-align:center;padding:40px;color:#64748b;">No active chats. Tap + to chat!</div>`; return; }
+
+      const rows = Array.from(map.values()).map(it => {
+        const c = it.user.toLowerCase().replace("@", "");
+        let m = null; try { m = JSON.parse(localStorage.getItem("cb_latest_msg_" + c) || "null"); } catch (e) {}
+        return { ...it, sub: m ? (m.sender === "me" ? `<span style="color:#38bdf8;font-weight:700;">✓✓ </span>` + m.text : m.text) : "Tap to start chatting", time: m ? m.time : "", ts: m ? Number(m.ts) : 0, isPin: pin.includes(it.user), isMut: mut.includes(it.user), isUnr: unr.includes(it.user) };
+      }).sort((a, b) => (a.isPin !== b.isPin) ? (a.isPin ? -1 : 1) : (b.ts - a.ts));
+
+      const html = rows.map(r => `
+        <div class="wa-row" style="background:${waSel === r.user ? 'rgba(0,128,105,0.15)' : ''}"
+          ontouchstart="waTimer=setTimeout(()=>waOpen('${r.user}','${r.name}'),450)" ontouchend="clearTimeout(waTimer)" ontouchmove="clearTimeout(waTimer)"
+          onclick="if(waSel){waCloseBar();return;}let u=JSON.parse(localStorage.getItem('cb_unread_chats')||'[]').filter(x=>x!=='${r.user}');localStorage.setItem('cb_unread_chats',JSON.stringify(u));localStorage.setItem('active_chat_name','${r.name}');localStorage.setItem('active_chat_user','${r.user}');window.location.href='for.html';">
+          <div class="wa-av">${r.name.charAt(0).toUpperCase()}</div>
+          <div class="wa-mid"><div class="wa-name">${r.name}</div><div class="wa-sub">${r.sub}</div></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;">
+            <div class="wa-time" style="color:${r.isUnr ? '#10b981' : ''};">${r.time}</div>
+            <div style="display:flex;align-items:center;gap:6px;opacity:0.65;">
+              ${r.isMut ? svgMuteSm : ""}${r.isPin ? svgPinSm : ""}
+              ${r.isUnr ? `<span style="width:18px;height:18px;border-radius:50%;background:#10b981;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">1</span>` : ""}
+            </div>
+          </div>
+        </div>`).join("");
+      if (box.innerHTML !== html) box.innerHTML = html;
+    }
+    renderWA(); setInterval(renderWA, 1000);
+  </script>
+
+
+
+
+  <script src="dp.js"></script>
+  <script src="theme.js"></script>
+  <script src="chat_actions.js?v=4"></script>
+ <script src="no_tap.js"></script>
+   <script src="popup.js"></script>
+  <script src="home_menu.js"></script>
+  
+<script>
+  (function syncRealWhatsAppChatRows() {
+    function updateRows() {
+      document.querySelectorAll(".chat-item, .user-card, .friend-card, .dm-card").forEach(card => {
+        // कार्ड से दोस्त का @username निकालना
+        const fullTxt = card.innerText || "";
+        const match = fullTxt.match(/@[a-zA-Z0-9_]+/);
+        const userHandle = card.dataset.user || (match ? match : "");
+
+        // फालतू 'Direct' और 'Chat' बटन छिपाना
+        card.querySelectorAll("button, span, div").forEach(el => {
+          const t = (el.innerText || "").trim();
+          if (t === "Direct" || t === "Chat") el.style.display = "none";
+        });
+
+        // असली चैट हिस्ट्री से आखिरी मैसेज और असली समय निकालना
+        let realLastMsg = "Tap to start chatting";
+        let realTime = "";
+        let isSentByMe = false;
+
+        if (userHandle) {
+          const msgs = JSON.parse(localStorage.getItem("chat_msgs_" + userHandle) || "[]");
+          if (msgs.length > 0) {
+            const last = msgs[msgs.length - 1];
+            realLastMsg = last.text || last.content || "Media message";
+            realTime = last.time || "";
+            isSentByMe = last.sender === "me";
+          }
+        }
+
+        // सब-टाइटल में असली आखिरी मैसेज दिखाना
+        const subEl = card.querySelector("p, .sub, .status, div[style*='12px'], div[style*='13px']");
+        if (subEl && !subEl.classList.contains("cb-real-time")) {
+          const tick = isSentByMe ? `<span style="color:#38bdf8;font-weight:700;">✓✓ </span>` : "";
+          subEl.innerHTML = tick + realLastMsg;
+        }
+
+        // दाईं तरफ असली समय लगाना (ताकि बार-बार न बदले)
+        let timeBox = card.querySelector(".cb-real-time");
+        if (!timeBox) {
+          timeBox = document.createElement("div");
+          timeBox.className = "cb-real-time";
+          timeBox.style.cssText = "font-size:11.5px; color:var(--text-sub, #64748b); align-self:flex-start; margin-top:4px; flex-shrink:0; font-weight:600;";
+          card.appendChild(timeBox);
+        }
+        if (realTime) timeBox.innerText = realTime;
+      });
+    }
+
+    updateRows();
+    setInterval(updateRows, 800);
+  })();
+</script>
+
+    <script>
+  (function listenNewUserJoins() {
+    function showJoinToast(info) {
+      const toast = document.createElement("div");
+      toast.style.cssText = "position:fixed;top:14px;left:14px;right:14px;background:#0f172a;color:#fff;padding:12px 16px;border-radius:16px;box-shadow:0 8px 24px rgba(0,0,0,0.25);z-index:99999;display:flex;align-items:center;justify-content:space-between;font-size:13.5px;";
+            toast.innerHTML = `<div><b>🎉 ${info.name}</b> joined ChatBox!<br><span style="opacity:0.75;font-size:12px;">${info.user}</span></div><button style="background:#008069;border:none;color:#fff;padding:6px 12px;border-radius:10px;font-weight:700;">View</button>`;
+      toast.onclick = () => {
+        const searchInp = document.querySelector("#userSearchInput, input[placeholder*='Search']");
+        if (searchInp) {
+          searchInp.value = info.user;
+          searchInp.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+        toast.remove();
+      };
+
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 5000);
+    }
+
+    // लाइव सर्वर से नया यूज़र जुड़ते ही तुरंत नोटिफिकेशन दिखाना
+    if (window.socket) {
+      window.socket.on("new_user_joined", (data) => {
+        const list = JSON.parse(localStorage.getItem("cb_system_notifications") || "[]");
+        list.unshift(data);
+        localStorage.setItem("cb_system_notifications", JSON.stringify(list));
+        showJoinToast(data);
+      });
+    }
+  })();
+</script>
+<script>
+  (function lockHomeScreenBackButton() {
+    // 1. बिना लॉग-इन किए कोई सीधे third.html न खोल सके
+    if (!localStorage.getItem("chatbox_username")) {
+      window.location.replace("sec.html");
+      return;
+    }
+
+    // 2. फोन का Back बटन दबाने पर वापस Login स्क्रीन पर जाने से रोकना
+    history.pushState(null, "", location.href);
+    window.addEventListener("popstate", function () {
+      history.pushState(null, "", location.href);
+    });
+  })();
+</script>
+
+
+
+
+
+
+</body>
+</html>
+

@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Live Polls</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      padding: 20px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .new-poll-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .container {
+      padding: 20px 15px;
+      flex: 1;
+    }
+
+    .poll-card {
+      background: white;
+      border-radius: 22px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .poll-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .poll-author {
+      font-size: 12px;
+      color: #2979FF;
+      font-weight: bold;
+    }
+
+    .del-poll {
+      background: none;
+      border: none;
+      color: #ef4444;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .poll-question {
+      font-size: 17px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    .option-box {
+      position: relative;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px 15px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      overflow: hidden;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      transition: border-color 0.2s;
+    }
+
+    .option-box.voted {
+      border-color: #2979FF;
+    }
+
+    .option-fill {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      background: rgba(41, 121, 255, 0.12);
+      transition: width 0.4s ease;
+      z-index: 1;
+    }
+
+    .option-box.voted .option-fill {
+      background: rgba(29, 233, 182, 0.25);
+    }
+
+    .option-text, .option-percent {
+      position: relative;
+      z-index: 2;
+    }
+
+    .option-percent {
+      color: #2979FF;
+      font-weight: bold;
+    }
+
+    .poll-footer {
+      font-size: 12px;
+      color: #64748b;
+      margin-top: 8px;
+      text-align: right;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="header-left">
+      <a href="third.html" style="width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; text-decoration: none;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <div class="header-title">📊 Live Polls</div>
+    </div>
+    <button class="new-poll-btn" onclick="createPoll()">+ Create</button>
+  </div>
+
+  <div class="container" id="pollsContainer"></div>
+
+  <script>
+    // शुरुआती डिफ़ॉल्ट पोल डेटा
+    const defaultPolls = [
+      {
+        id: "poll_default_1",
+        author: "@chatbox_official • Active Poll",
+        question: "Which ChatBox feature do you love the most? 🔥",
+        options: [
+          { text: "🔒 No Phone Number Privacy", votes: 92 },
+          { text: "✨ Smart AI & Translator", votes: 36 },
+          { text: "🎨 Custom Themes & Wallpapers", votes: 14 }
+        ],
+        userVotedIndex: -1,
+        isCustom: false
+      }
+    ];
+
+    // मेमोरी से सेव किए गए पोल्स लोड करना
+    function getPolls() {
+      const saved = localStorage.getItem("chatbox_saved_polls");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+      localStorage.setItem("chatbox_saved_polls", JSON.stringify(defaultPolls));
+      return defaultPolls;
+    }
+
+    // पोल्स को मेमोरी में सेव करना
+    function savePolls(pollsArray) {
+      localStorage.setItem("chatbox_saved_polls", JSON.stringify(pollsArray));
+    }
+
+    // स्क्रीन पर सभी पोल्स दिखाना
+    function renderPolls() {
+      const polls = getPolls();
+      const container = document.getElementById("pollsContainer");
+      container.innerHTML = "";
+
+      polls.forEach((poll, pIdx) => {
+        const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes, 0);
+
+        let optionsHTML = "";
+        poll.options.forEach((opt, oIdx) => {
+          const pct = totalVotes === 0 ? 0 : Math.round((opt.votes / totalVotes) * 100);
+          const isVoted = (poll.userVotedIndex === oIdx);
+
+          optionsHTML += `
+            <div class="option-box ${isVoted ? 'voted' : ''}" onclick="castVote(${pIdx}, ${oIdx})">
+              <div class="option-fill" style="width: ${pct}%;"></div>
+              <span class="option-text">${opt.text}</span>
+              <span class="option-percent">${pct}% ${isVoted ? '✓' : ''}</span>
+            </div>
+          `;
+        });
+
+        const deleteBtn = poll.isCustom ? `<button class="del-poll" onclick="deletePoll(${pIdx})">Delete</button>` : "";
+
+        const card = document.createElement("div");
+        card.className = "poll-card";
+        card.innerHTML = `
+          <div class="poll-top">
+            <span class="poll-author">${poll.author}</span>
+            ${deleteBtn}
+          </div>
+          <div class="poll-question">${poll.question}</div>
+          ${optionsHTML}
+          <div class="poll-footer">${totalVotes} Votes • Saved automatically</div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // वोट देना और असली प्रतिशत (Percentage) सेव करना
+    function castVote(pollIndex, optionIndex) {
+      let polls = getPolls();
+      let poll = polls[pollIndex];
+
+      // अगर पहले किसी और ऑप्शन पर वोट दिया था, तो पुराना वोट घटाएँ
+      if (poll.userVotedIndex !== -1) {
+        poll.options[poll.userVotedIndex].votes--;
+      }
+
+      // नया वोट जोड़ें और सेव करें
+      poll.options[optionIndex].votes++;
+      poll.userVotedIndex = optionIndex;
+
+      savePolls(polls);
+      renderPolls();
+    }
+
+    // नया पोल बनाना और सेव करना
+    function createPoll() {
+      const q = prompt("Enter your Poll Question:");
+      if (!q || q.trim() === "") return;
+
+      const opt1 = prompt("Enter Option 1:", "Yes");
+      const opt2 = prompt("Enter Option 2:", "No");
+      if (!opt1 || !opt2) return;
+
+      const opt3 = prompt("Enter Option 3 (Optional - leave blank to skip):", "");
+
+      const user = localStorage.getItem("chatbox_username") || "you";
+      let newOptions = [
+        { text: opt1.trim(), votes: 0 },
+        { text: opt2.trim(), votes: 0 }
+      ];
+      if (opt3 && opt3.trim() !== "") {
+        newOptions.push({ text: opt3.trim(), votes: 0 });
+      }
+
+      let polls = getPolls();
+      polls.unshift({
+        id: "poll_" + Date.now(),
+        author: "@" + user + " • Created by You",
+        question: q.trim(),
+        options: newOptions,
+        userVotedIndex: -1,
+        isCustom: true
+      });
+
+      savePolls(polls);
+      renderPolls();
+    }
+
+    // अपना बनाया हुआ पोल डिलीट करना
+    function deletePoll(pollIndex) {
+      let polls = getPolls();
+      polls.splice(pollIndex, 1);
+      savePolls(polls);
+      renderPolls();
+    }
+
+    window.onload = renderPolls;
+  </script>
+<script src="theme.js"></script>
+   <script src="no_tap.js"></script>
+   <script src="app_global.js"></script>
+
+</body>
+</html>

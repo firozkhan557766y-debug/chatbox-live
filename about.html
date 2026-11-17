@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - About & Help</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ऊपर का हेडर */
+    .top-bar {
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      padding: 20px;
+      
+      display: flex;
+      align-items: center;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .back-btn {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    .header-title {
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 25px 15px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ऐप ब्रांडिंग कार्ड */
+    .brand-card {
+      background: white;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 25px;
+      padding: 30px 20px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .app-logo {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      font-size: 42px;
+      font-weight: 900;
+      border-radius: 22px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto 15px auto;
+      box-shadow: 0 10px 20px rgba(41, 121, 255, 0.25);
+    }
+
+    .brand-card h2 {
+      font-size: 26px;
+      margin-bottom: 5px;
+    }
+
+    .version-tag {
+      background: #eff6ff;
+      color: #2979FF;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 4px 12px;
+      border-radius: 12px;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+
+    .desc {
+      font-size: 14px;
+      color: #64748b;
+      line-height: 1.5;
+    }
+
+    /* खासियत बॉक्स */
+    .features-box {
+      background: white;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+      margin-bottom: 20px;
+    }
+
+    .feat-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .feat-row:last-child {
+      border-bottom: none;
+    }
+
+    .share-app-btn {
+      width: 100%;
+      max-width: 400px;
+      padding: 16px;
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      border: none;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(41, 121, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- हेडर -->
+  <div class="top-bar">
+    <a href="setting.html" style="width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; text-decoration: none;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+</a>
+
+    <div class="header-title">About ChatBox</div>
+  </div>
+
+  <div class="container">
+    <!-- ब्रांड कार्ड -->
+    <div class="brand-card">
+      <div class="app-logo">C</div>
+      <h2>ChatBox</h2>
+      <span class="version-tag">Version 1.0 • Privacy Edition</span>
+      <p class="desc">A next-generation messaging app built for speed, smart AI tools, and 100% phone number privacy.</p>
+    </div>
+
+    <!-- सुरक्षा गारंटी -->
+    <div class="features-box">
+      <div class="feat-row"><span>🔒</span> End-to-End Private @Username Chats</div>
+      <div class="feat-row"><span>🛡️</span> Built-in PIN Lock & Secret Vault</div>
+      <div class="feat-row"><span>✨</span> Smart AI Translator & Scheduler</div>
+      <div class="feat-row"><span>⚡</span> Lightweight & Super Fast</div>
+    </div>
+
+    <button class="share-app-btn" onclick="shareChatBox()">📲 Invite Friends to ChatBox</button>
+  </div>
+
+  <script>
+    function shareChatBox() {
+      const inviteMsg = "Hey! Download ChatBox — chat fast and securely without sharing your phone number! 🚀";
+      navigator.clipboard.writeText(inviteMsg);
+      alert("Invite message copied! Send it to your friends.");
+    }
+  </script>
+<script src="theme.js"></script>
+ <script src="no_tap.js"></script>
+ <script src="app_global.js"></script>
+
+</body>
+</html>

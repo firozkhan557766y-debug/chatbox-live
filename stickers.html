@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Sticker Store</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ऊपर का हेडर */
+    .top-bar {
+      background: linear-gradient(135deg, #FF4081 0%, #7C4DFF 100%);
+      color: white;
+      padding: 20px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 5px 20px rgba(124, 77, 255, 0.25);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .back-btn {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    .header-title {
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 20px 15px;
+      flex: 1;
+    }
+
+    /* अवतार मेकर कार्ड */
+    .avatar-banner {
+      background: white;
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      text-align: center;
+    }
+
+    .avatar-banner h3 {
+      font-size: 16px;
+      margin-bottom: 12px;
+      color: #7C4DFF;
+    }
+
+    .avatar-grid {
+      display: flex;
+      justify-content: space-around;
+      gap: 10px;
+    }
+
+    .avatar-option {
+      width: 55px;
+      height: 55px;
+      border-radius: 18px;
+      background: #f1f5f9;
+      font-size: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.15s;
+    }
+
+    .avatar-option.selected {
+      border-color: #7C4DFF;
+      background: #f3e8ff;
+      transform: scale(1.08);
+    }
+
+    /* स्टिकर पैक्स */
+    .pack-card {
+      background: white;
+      border-radius: 22px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+    }
+
+    .pack-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .pack-title h4 {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    .pack-title span {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .add-pack-btn {
+      background: #eff6ff;
+      color: #2979FF;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .add-pack-btn.added {
+      background: #dcfce7;
+      color: #16a34a;
+    }
+
+    .stickers-row {
+      display: flex;
+      justify-content: space-between;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 16px;
+    }
+
+    .sticker-item {
+      font-size: 32px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .sticker-item:active {
+      transform: scale(1.3);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- हेडर -->
+  <div class="top-bar">
+    <div class="header-left">
+      <a href="third.html" style="width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; text-decoration: none;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+</a>
+
+      <div class="header-title">🎭 Stickers & Avatars</div>
+    </div>
+    <span style="font-size: 12px; background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px;">Free</span>
+  </div>
+
+  <div class="container">
+    <!-- 1. कस्टम अवतार चुनने का बॉक्स -->
+    <div class="avatar-banner">
+      <h3>Choose Your ChatBox Avatar</h3>
+      <div class="avatar-grid">
+        <div class="avatar-option" onclick="selectAvatar(this, '😎')">😎</div>
+        <div class="avatar-option" onclick="selectAvatar(this, '🦊')">🦊</div>
+        <div class="avatar-option" onclick="selectAvatar(this, '🤖')">🤖</div>
+        <div class="avatar-option" onclick="selectAvatar(this, '🐼')">🐼</div>
+        <div class="avatar-option" onclick="selectAvatar(this, '🥷')">🥷</div>
+      </div>
+    </div>
+
+    <!-- 2. स्टिकर पैक 1 -->
+    <div class="pack-card">
+      <div class="pack-header">
+        <div class="pack-title">
+          <h4>Fun & Reactions Pack</h4>
+          <span>6 Animated Style Stickers</span>
+        </div>
+        <button class="add-pack-btn" onclick="togglePack(this)">+ Add</button>
+      </div>
+      <div class="stickers-row">
+        <span class="sticker-item" onclick="copySticker('😂')">😂</span>
+        <span class="sticker-item" onclick="copySticker('🔥')">🔥</span>
+        <span class="sticker-item" onclick="copySticker('🥳')">🥳</span>
+        <span class="sticker-item" onclick="copySticker('🤯')">🤯</span>
+        <span class="sticker-item" onclick="copySticker('❤️')">❤️</span>
+      </div>
+    </div>
+
+    <!-- 3. स्टिकर पैक 2 -->
+    <div class="pack-card">
+      <div class="pack-header">
+        <div class="pack-title">
+          <h4>Privacy & Ninja Pack</h4>
+          <span>Exclusive for ChatBox Users</span>
+        </div>
+        <button class="add-pack-btn" onclick="togglePack(this)">+ Add</button>
+      </div>
+      <div class="stickers-row">
+        <span class="sticker-item" onclick="copySticker('🕵️')">🕵️</span>
+        <span class="sticker-item" onclick="copySticker('🔐')">🔐</span>
+        <span class="sticker-item" onclick="copySticker('👻')">👻</span>
+        <span class="sticker-item" onclick="copySticker('🚀')">🚀</span>
+        <span class="sticker-item" onclick="copySticker('🛡️')">🛡️</span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // अवतार चुनना और सेव करना
+    function selectAvatar(el, emoji) {
+      document.querySelectorAll(".avatar-option").forEach(item => item.classList.remove("selected"));
+      el.classList.add("selected");
+      localStorage.setItem("chatbox_avatar", emoji);
+      alert("Avatar updated to " + emoji + "!");
+    }
+
+    // स्टिकर पैक जोड़ना/हटाना
+    function togglePack(btn) {
+      if (btn.classList.contains("added")) {
+        btn.classList.remove("added");
+        btn.innerText = "+ Add";
+      } else {
+        btn.classList.add("added");
+        btn.innerText = "✓ Added";
+      }
+    }
+
+    // स्टिकर कॉपी करना
+    function copySticker(sticker) {
+      navigator.clipboard.writeText(sticker);
+      alert("Sticker " + sticker + " copied! Paste it in any chat.");
+    }
+  </script>
+<script src="theme.js"></script>
+ <script src="no_tap.js"></script>
+ <script src="app_global.js"></script>
+
+</body>
+</html>

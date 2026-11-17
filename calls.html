@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calls - ChatBox</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { display: block !important; width: 100% !important; min-height: 100vh; background: #f8fafc; color: #0f172a; padding-bottom: 90px; }
+
+    .calls-top { height: 60px; padding: 0 18px; background: #008069; color: #ffffff; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 50; box-shadow: 0 0px 0px rgba(0,0,0,0.08);
+    border-bottom: 1px solid #f1f5f9;}
+    .calls-title { font-size: 21px; font-weight: 700; }
+    .sec-lbl { padding: 14px 18px 6px 18px; font-size: 12px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; }
+    .c-list { padding: 4px 16px; }
+    .c-card { background: #ffffff; border-radius: 18px; padding: 14px 16px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 3px 12px rgba(0,0,0,0.04); }
+    .c-av { width: 46px; height: 46px; border-radius: 50%; background: linear-gradient(135deg, #00F5D4, #2979FF); color: #ffffff; font-weight: 700; font-size: 18px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .c-btn { width: 40px; height: 40px; border-radius: 50%; border: none; background: #f0fdf4; color: #008069; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="calls-top" id="callsHdr">
+    <div class="calls-title">  Calls </div>
+  </div>
+
+  <div class="sec-lbl">RECENT CALL HISTORY</div>
+  <div class="c-list" id="cbRealCallsContainer"></div>
+
+  <script>
+    const g = localStorage.getItem("chatbox_theme_grad");
+    const p = localStorage.getItem("chatbox_theme_primary");
+    if (g) document.getElementById("callsHdr").style.background = g;
+
+    function formatCallTime(ts, fallback) {
+      if (!ts) return fallback || "Today";
+      const d = new Date(ts);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const yesterday = today - 86400000;
+      const tStr = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      if (ts >= today) return "Today, " + tStr;
+      if (ts >= yesterday) return "Yesterday, " + tStr;
+      return d.toLocaleDateString([], { day: "2-digit", month: "short" }) + ", " + tStr;
+    }
+
+    window.renderCalls = function () {
+      const box = document.getElementById("cbRealCallsContainer");
+      const logs = JSON.parse(localStorage.getItem("chatbox_call_logs") || "[]");
+
+      if (logs.length === 0) {
+        box.innerHTML = `<div style="text-align:center;padding:70px 20px;color:#94a3b8;font-size:14px;line-height:1.5;">No recent call history.<br>Your real voice & video calls will appear here.</div>`;
+        return;
+      }
+
+      box.innerHTML = logs.map(c => {
+        const isMissed = c.duration === "No answer" || c.dir === "Missed";
+        const dt = formatCallTime(c.ts, c.time);
+        const dur = c.duration ? ` • <b>${c.duration}</b>` : "";
+        return `
+          <div class="c-card">
+            <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+              <div class="c-av" style="${g ? 'background:' + g : ''}">${(c.name || "U").charAt(0).toUpperCase()}</div>
+              <div style="min-width:0;flex:1;">
+                <div style="font-weight:700;font-size:15.5px;color:${isMissed ? "#dc2626" : "#0f172a"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name || c.user}</div>
+                <div style="font-size:12px;color:#64748b;margin-top:3px;">
+                  <span style="color:${isMissed ? "#dc2626" : (p || "#008069")};font-weight:700;">${c.dir || "Outgoing"}</span> • ${dt}${dur}
+                </div>
+              </div>
+            </div>
+            <button type="button" class="c-btn" style="${p ? 'color:' + p : ''}" onclick="if(window.startRealCall)window.startRealCall('${c.user}','${c.name}',${c.type === 'Video'})">
+              ${c.type === "Video"
+                ? `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>`
+                : `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 0 0 1 22 16.92z"/></svg>`}
+            </button>
+          </div>
+        `;
+      }).join("");
+    };
+
+    window.clearLogs = function () {
+      if (window.showAppConfirm) {
+        showAppConfirm("Clear all call history?", true, "Clear").then(yes => {
+          if (yes) {
+            localStorage.setItem("chatbox_call_logs", "[]");
+            window.renderCalls();
+          }
+        });
+      }
+    };
+
+    window.renderCalls();
+  </script>
+  <script src="live.js"></script>
+  <script src="calling.js?v=11"></script>
+  <script src="popup.js"></script>
+  <script src="page_menus.js"></script>
+      <script src="theme.js"></script>
+  <style>
+    body {
+      display: block !important;
+      background: var(--bg-color, #f8fafc) !important;
+      color: var(--text-main, #0f172a) !important;
+    }
+    .calls-top {
+      background: var(--primary-grad, #008069) !important;
+    }
+    .c-card {
+      background: var(--card-bg, #ffffff) !important;
+      border: 1px solid var(--border-col, #f1f5f9) !important;
+    }
+    .c-card div {
+      color: var(--text-main, #0f172a) !important;
+    }
+    .sec-lbl {
+      color: var(--text-sub, #64748b) !important;
+    }
+    .c-btn {
+      background: var(--bg-color, #f0fdf4) !important;
+      color: var(--accent-color, #008069) !important;
+    }
+  </style>
+
+  <script src="nav.js"></script>
+</body>
+</html>

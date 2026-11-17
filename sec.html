@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <script>
+  if (localStorage.getItem("chatbox_username") && localStorage.getItem("chatbox_phone")) {
+    window.location.replace("third.html");
+  }
+</script>
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Secure Live Auth</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #f1f5f9; color: #0f172a; min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 18px; }
+    .card { background: white; width: 100%; max-width: 390px; border-radius: 28px; padding: 26px 22px; box-shadow: 0 12px 35px rgba(15,23,42,0.08); text-align: center; }
+    .logo { width: 62px; height: 62px; border-radius: 20px; background: linear-gradient(135deg, #0f172a, #1e293b); color: #00F5D4; font-size: 30px; font-weight: 900; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; box-shadow: 0 8px 20px rgba(41,121,255,0.25); }
+    .tabs { display: flex; background: #f1f5f9; border-radius: 14px; padding: 4px; margin-bottom: 16px; }
+    .tab { flex: 1; padding: 9px; border: none; border-radius: 11px; font-size: 13px; font-weight: 700; color: #64748b; background: transparent; cursor: pointer; }
+    .tab.active { background: white; color: #2979FF; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+    
+    .grp { text-align: left; margin-bottom: 12px; }
+    .grp label { display: block; font-size: 11px; font-weight: 800; color: #475569; margin-bottom: 4px; text-transform: uppercase; }
+    .in-row { display: flex; gap: 8px; }
+    .in-box { width: 100%; padding: 12px 14px; border: 1.8px solid #cbd5e1; border-radius: 13px; font-size: 14px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .in-box:focus { border-color: #2979FF; }
+    
+    /* लाल बॉर्डर और नीचे का लाल एरर टेक्स्ट */
+    .in-box.err-border { border-color: #ef4444 !important; background: #fef2f2; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14); }
+    .err-txt { color: #ef4444; font-size: 11.5px; font-weight: 700; margin-top: 4px; display: none; padding-left: 2px; }
+
+    /* दो बार झटके (Double Jump/Shake) वाला एनीमेशन */
+    @keyframes doubleShake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-7px); }
+      40% { transform: translateX(7px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+    .shake-now { animation: doubleShake 0.38s ease-in-out; }
+
+    .otp-btn { padding: 0 14px; border: none; border-radius: 13px; background: #0f172a; color: white; font-size: 12px; font-weight: 700; white-space: nowrap; cursor: pointer; }
+    .main-btn { width: 100%; padding: 14px; border: none; border-radius: 15px; background: linear-gradient(135deg, #00d2ff, #2979FF); color: white; font-size: 15px; font-weight: 700; margin-top: 8px; cursor: pointer; }
+    .link-btn { background: none; border: none; color: #2979FF; font-size: 13px; font-weight: 700; margin-top: 14px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">C</div>
+    <h2 style="font-size:21px;">ChatBox Private</h2>
+    <p style="font-size:12px; color:#64748b; margin-bottom:16px;">🔒 Live Server Verified • Number 100% Hidden</p>
+
+    <div class="tabs">
+      <button class="tab active" id="tSignup" onclick="setMode('signup')">Create Account</button>
+      <button class="tab" id="tLogin" onclick="setMode('login')">Login</button>
+    </div>
+
+    <div class="grp" id="fName">
+      <label>Display Name</label>
+      <input type="text" id="inName" class="in-box" placeholder="e.g. Rahul Verma" oninput="clearErr('inName')">
+      <div class="err-txt" id="err_inName"></div>
+    </div>
+
+    <div class="grp" id="fUser">
+      <label>Unique @Username ID</label>
+      <input type="text" id="inUser" class="in-box" placeholder="e.g. rahul_99" oninput="clearErr('inUser')">
+      <div class="err-txt" id="err_inUser"></div>
+    </div>
+
+    <div class="grp" id="fPhone">
+      <label>Mobile Number <span style="color:#16a34a;">(Hidden from everyone)</span></label>
+      <div class="in-row">
+        <input type="tel" id="inPhone" class="in-box" placeholder="10-digit number" maxlength="10" oninput="clearErr('inPhone')">
+        <button class="otp-btn" onclick="requestOTP()">Send OTP</button>
+      </div>
+      <div class="err-txt" id="err_inPhone"></div>
+    </div>
+
+    <div class="grp" id="fOtp">
+      <label>Enter 6-Digit OTP</label>
+      <input type="number" id="inOtp" class="in-box" placeholder="6-digit OTP" oninput="clearErr('inOtp')">
+      <div class="err-txt" id="err_inOtp"></div>
+    </div>
+
+    <div class="grp" id="fPass">
+      <label id="passLbl">Create Strong Password (Min 6 chars)</label>
+      <input type="password" id="inPass" class="in-box" placeholder="Enter password" oninput="clearErr('inPass')">
+      <div class="err-txt" id="err_inPass"></div>
+    </div>
+
+    <button class="main-btn" id="subBtn" onclick="submitAuth()">Verify OTP & Create Account →</button>
+    <button class="link-btn" id="forgotBtn" style="display:none;" onclick="setMode('reset')">Forgot Password? Reset via Mobile OTP</button>
+      <script>
+    let mode = "signup";
+    let otpSentPhone = "";
+
+    // लाल बॉर्डर, दो बार शेक (Jump-Shake) और नीचे लाल संदेश दिखाने का फंक्शन
+    function showFieldError(inputId, msg) {
+      const box = document.getElementById(inputId);
+      const txt = document.getElementById("err_" + inputId);
+      box.classList.add("err-border");
+      box.classList.remove("shake-now");
+      void box.offsetWidth; // एनीमेशन रीसेट करने के लिए
+      box.classList.add("shake-now");
+      if (txt) {
+        txt.innerText = msg;
+        txt.style.display = "block";
+      }
+      box.focus();
+    }
+
+    function clearErr(inputId) {
+      const box = document.getElementById(inputId);
+      const txt = document.getElementById("err_" + inputId);
+      box.classList.remove("err-border", "shake-now");
+      if (txt) txt.style.display = "none";
+    }
+
+    function clearAllErrors() {
+      ["inName", "inUser", "inPhone", "inOtp", "inPass"].forEach(clearErr);
+    }
+
+    function setMode(m) {
+      mode = m;
+      clearAllErrors();
+      document.getElementById("tSignup").className = m === "signup" ? "tab active" : "tab";
+      document.getElementById("tLogin").className = (m === "login" || m === "reset") ? "tab active" : "tab";
+
+      document.getElementById("fName").style.display = m === "signup" ? "block" : "none";
+      document.getElementById("fUser").style.display = m === "reset" ? "none" : "block";
+      document.getElementById("fPhone").style.display = (m === "signup" || m === "reset") ? "block" : "none";
+      document.getElementById("fOtp").style.display = (m === "signup" || m === "reset") ? "block" : "none";
+      document.getElementById("forgotBtn").style.display = m === "login" ? "inline-block" : "none";
+
+      if (m === "signup") {
+        document.getElementById("passLbl").innerText = "Create Strong Password (Min 6 chars)";
+        document.getElementById("subBtn").innerText = "Verify OTP & Create Account →";
+      } else if (m === "login") {
+        document.getElementById("passLbl").innerText = "Secret Password";
+        document.getElementById("subBtn").innerText = "Login to ChatBox →";
+      } else {
+        document.getElementById("passLbl").innerText = "Set New Strong Password (Min 6 chars)";
+        document.getElementById("subBtn").innerText = "Verify OTP & Reset Password →";
+      }
+    }
+
+    async function requestOTP() {
+      const phone = document.getElementById("inPhone").value.trim();
+      if (!/^\d{10}$/.test(phone)) {
+        showFieldError("inPhone", "Enter a valid 10-digit mobile number");
+        return;
+      }
+
+      try {
+        const res = await fetch("/api/send_otp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone, purpose: mode })
+        });
+        const data = await res.json();
+        if (!data.ok) {
+          showFieldError("inPhone", data.msg);
+          return;
+        }
+        otpSentPhone = phone;
+        alert("📩 Server OTP: " + data.demoOtp);
+      } catch (e) {
+        showFieldError("inPhone", "Live server not connected! Open Render URL.");
+      }
+    }
+
+    async function submitAuth() {
+      clearAllErrors();
+      const name = document.getElementById("inName").value.trim();
+      const user = document.getElementById("inUser").value.trim().toLowerCase().replace("@", "");
+      const phone = document.getElementById("inPhone").value.trim();
+      const otp = document.getElementById("inOtp").value.trim();
+      const pass = document.getElementById("inPass").value.trim();
+
+      try {
+        if (mode === "signup") {
+          if (!/^[a-zA-Z\s]{3,25}$/.test(name)) {
+            showFieldError("inName", "Use letters only (minimum 3 characters)");
+            return;
+          }
+          if (!/^[a-z0-9_]{4,20}$/.test(user)) {
+            showFieldError("inUser", "Use 4-20 lowercase letters, numbers or _");
+            return;
+          }
+          if (!/^\d{10}$/.test(phone) || phone !== otpSentPhone) {
+            showFieldError("inPhone", "Enter 10-digit number and tap 'Send OTP' first");
+            return;
+          }
+          if (otp.length !== 6) {
+            showFieldError("inOtp", "Enter valid 6-digit OTP");
+            return;
+          }
+          if (pass.length < 6) {
+            showFieldError("inPass", "Password must be at least 6 characters");
+            return;
+          }
+
+          const res = await fetch("/api/signup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, user, phone, otp, pass })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            if (data.msg.toLowerCase().includes("otp")) showFieldError("inOtp", data.msg);
+            else showFieldError("inUser", data.msg);
+            return;
+          }
+
+          localStorage.clear();
+          localStorage.setItem("chatbox_name", name);
+          localStorage.setItem("chatbox_username", user);
+          localStorage.setItem("chatbox_phone", phone);
+                  const newJoinAlert = {
+          id: "join_" + Date.now(),
+          type: "new_user",
+          name: name || "New User",
+          phone: phone || "",
+          user: user || ("@" + (name || "user").toLowerCase().replace(/\s+/g, "_")),
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          ts: Date.now()
+        };
+        const allAlerts = JSON.parse(localStorage.getItem("cb_system_notifications") || "[]");
+        allAlerts.unshift(newJoinAlert);
+        localStorage.setItem("cb_system_notifications", JSON.stringify(allAlerts));
+        if (window.socket) window.socket.emit("new_user_joined", newJoinAlert);
+
+          window.location.href = "third.html";
+        }
+        else if (mode === "login") {
+          if (user.length < 4) {
+            showFieldError("inUser", "Enter a valid @username");
+            return;
+          }
+          if (pass.length < 6) {
+            showFieldError("inPass", "Enter your password (minimum 6 characters)");
+            return;
+          }
+
+          const res = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user, pass })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            if (data.msg.toLowerCase().includes("password")) showFieldError("inPass", data.msg);
+            else showFieldError("inUser", data.msg);
+            return;
+          }
+
+          localStorage.removeItem("chatbox_dp");
+          localStorage.setItem("chatbox_name", data.name);
+          localStorage.setItem("chatbox_username", user);
+          if (data.dp) localStorage.setItem("chatbox_dp", data.dp);
+          window.location.href = "third.html";
+        }
+        else if (mode === "reset") {
+          if (!/^\d{10}$/.test(phone) || phone !== otpSentPhone) {
+            showFieldError("inPhone", "Send OTP to your registered 10-digit number first");
+            return;
+          }
+          if (otp.length !== 6) {
+            showFieldError("inOtp", "Enter valid 6-digit OTP");
+            return;
+          }
+          if (pass.length < 6) {
+            showFieldError("inPass", "New password must be at least 6 characters");
+            return;
+          }
+
+          const res = await fetch("/api/reset_password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ phone, otp, newPass: pass })
+          });
+          const data = await res.json();
+          if (!data.ok) {
+            showFieldError("inOtp", data.msg);
+            return;
+          }
+
+          localStorage.removeItem("chatbox_dp");
+          localStorage.setItem("chatbox_username", data.user);
+          localStorage.setItem("chatbox_name", data.name);
+          window.location.href = "third.html";
+        }
+      } catch (err) {
+        showFieldError("inPass", "Live Server Unreachable! Open your Render live link.");
+      }
+    }
+  </script>
+   <script src="no_tap.js"></script>
+   <script src="app_global.js"></script>
+</body>
+</html>
+
+  </div>

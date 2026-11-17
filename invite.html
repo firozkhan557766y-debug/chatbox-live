@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Find Friends</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #f1f5f9; color: #0f172a; min-height: 100vh; padding-bottom: 30px; }
+    .top { background: linear-gradient(135deg, #00d2ff, #2979FF); color: white; padding: 20px 16px; border-radius: 0 0 0px 0px; display: flex; align-items: center; gap: 12px; }
+    .back { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.22); color: white; text-decoration: none; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .container { padding: 16px; max-width: 450px; margin: 0 auto; }
+    .search-box { width: 100%; padding: 14px 16px; border-radius: 16px; border: 1.5px solid #cbd5e1; font-size: 15px; background: white; outline: none; margin-bottom: 14px; }
+    .u-card { background: white; padding: 14px; border-radius: 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); }
+    .u-left { display: flex; align-items: center; gap: 12px; }
+    .ava { width: 46px; height: 46px; border-radius: 16px; background: #eff6ff; color: #2979FF; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+    .req-btn { background: #2979FF; color: white; border: none; padding: 8px 14px; border-radius: 12px; font-size: 12px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <a href="third.html" class="back">‹</a>
+    <h2>🔍 Find Friends & IDs</h2>
+  </div>
+
+  <div class="container">
+    <input type="text" id="searchIn" class="search-box" placeholder="Search name or @username..." oninput="searchLiveUsers()">
+    <div id="usersList"></div>
+    <button onclick="syncPhoneContacts()" style="width:100%; padding:13px; border:none; border-radius:16px; background:linear-gradient(135deg,#0f172a,#1e293b); color:#00F5D4; font-weight:800; font-size:14px; margin-bottom:14px; cursor:pointer;">
+  📇 Sync Phone Contacts (Allow Permission)
+</button>
+
+  </div>
+
+  <script>
+    const isLocal = window.location.href.includes("7700") || window.location.protocol === "file:";
+    const myUser = "@" + (localStorage.getItem("chatbox_username") || "me");
+    const myName = localStorage.getItem("chatbox_name") || "User";
+
+    async function searchLiveUsers() {
+      const q = document.getElementById("searchIn").value.trim();
+      const box = document.getElementById("usersList");
+      box.innerHTML = "";
+
+      let list = [];
+      if (!isLocal) {
+        const res = await fetch("/api/search_users?q=" + encodeURIComponent(q));
+        const data = await res.json();
+        list = data.users || [];
+      } else {
+        let db = JSON.parse(localStorage.getItem("cb_users_db") || "{}");
+        Object.keys(db).forEach(u => {
+          if (!q || u.includes(q.toLowerCase()) || db[u].name.toLowerCase().includes(q.toLowerCase())) {
+            list.push({ name: db[u].name, username: "@" + u });
+          }
+        });
+      }
+
+      if (list.length === 0 && q !== "") {
+        const cleanId = q.startsWith("@") ? q : "@" + q;
+        list.push({ name: cleanId.replace("@", ""), username: cleanId });
+      }
+
+      list.forEach(u => {
+        if (u.username === myUser) return;
+        const div = document.createElement("div");
+        div.className = "u-card";
+        div.innerHTML = `
+          <div class="u-left">
+            <div class="ava">${u.name.charAt(0).toUpperCase()}</div>
+            <div>
+              <h4 style="font-size:15px;">${u.name}</h4>
+              <span style="font-size:12px; color:#2979FF; font-weight:600;">${u.username}</span>
+            </div>
+          </div>
+          <button class="req-btn" onclick="sendReq('${u.username}', '${u.name}')">+ Follow</button>
+        `;
+        box.appendChild(div);
+      });
+    }
+
+    function sendReq(targetId, targetName) {
+      if (window.sendLiveRequest) window.sendLiveRequest(targetId, myName, myUser);
+      alert("✅ Follow / Chat Request sent to " + targetId + "!");
+    }
+
+    searchLiveUsers();
+    async function syncPhoneContacts() {
+  if ("contacts" in navigator && "ContactsManager" in window) {
+    try {
+      // यहाँ ब्राउज़र आपसे असली कॉन्टैक्ट्स की अनुमति माँगेगा
+      const picked = await navigator.contacts.select(["name", "tel"], { multiple: true });
+      if (picked && picked.length > 0) {
+        localStorage.setItem("cb_phone_contacts", JSON.stringify(picked));
+        alert("✅ " + picked.length + " contacts synced! Matching friends on ChatBox...");
+      }
+    } catch (err) {
+      alert("❌ Contact permission denied or cancelled.");
+    }
+  } else {
+    alert("ℹ️ Phone contact picker works on Android Chrome (HTTPS live link) or inside the Android APK!");
+  }
+}
+
+  </script>
+  <script src="live.js"></script>
+  <script src="theme.js"></script>
+     <script src="no_tap.js"></script>
+     <script src="app_global.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Groups</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ऊपर का हेडर */
+    .top-bar {
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      padding: 20px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .back-btn {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    .header-title {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .create-btn {
+      background: rgba(255, 255, 255, 0.25);
+      border: none;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* ग्रुप्स की सूची */
+    .container {
+      padding: 20px 15px;
+      flex: 1;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #64748b;
+      margin: 5px 0 12px 5px;
+      text-transform: uppercase;
+    }
+
+    .group-card {
+      background: white;
+      padding: 16px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .group-card:active {
+      transform: scale(0.98);
+    }
+
+    .group-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .group-icon {
+      width: 52px;
+      height: 52px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, #7C4DFF, #448AFF);
+      color: white;
+      font-size: 24px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-right: 14px;
+      flex-shrink: 0;
+    }
+
+    .group-info h4 {
+      font-size: 16px;
+      margin-bottom: 4px;
+    }
+
+    .group-info p {
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    .member-badge {
+      background: #eff6ff;
+      color: #2979FF;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 5px 10px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- हेडर -->
+  <div class="top-bar">
+    <div class="header-left">
+      <a href="third.html" style="width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; text-decoration: none;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+</a>
+
+      <div class="header-title">Communities</div>
+    </div>
+    <button class="create-btn" onclick="createNewGroup()">+ New Group</button>
+  </div>
+
+  <!-- ग्रुप्स लिस्ट -->
+  <div class="container" id="groupsList">
+    <div class="section-label">Public Groups (Numbers Hidden)</div>
+
+    <!-- ग्रुप 1 -->
+    <div class="group-card" onclick="openGroupChat('ChatBox Official', '1,240 Members')">
+      <div class="group-left">
+        <div class="group-icon">🚀</div>
+        <div class="group-info">
+          <h4>ChatBox Official</h4>
+          <p>App updates, tips & new features</p>
+        </div>
+      </div>
+      <span class="member-badge">1.2K</span>
+    </div>
+
+    <!-- ग्रुप 2 -->
+    <div class="group-card" onclick="openGroupChat('Coding & Tech', '540 Members')">
+      <div class="group-left">
+        <div class="group-icon" style="background: linear-gradient(135deg, #11998e, #38ef7d);">💻</div>
+        <div class="group-info">
+          <h4>Coding & Tech</h4>
+          <p>Learn HTML, CSS & App building</p>
+        </div>
+      </div>
+      <span class="member-badge">540</span>
+    </div>
+
+    <!-- ग्रुप 3 -->
+    <div class="group-card" onclick="openGroupChat('Students Hangout', '890 Members')">
+      <div class="group-left">
+        <div class="group-icon" style="background: linear-gradient(135deg, #FF5252, #FF4081);">🎓</div>
+        <div class="group-info">
+          <h4>Students Hangout</h4>
+          <p>Study notes & fun discussions</p>
+        </div>
+      </div>
+      <span class="member-badge">890</span>
+    </div>
+  </div>
+
+  <script>
+    // ग्रुप पर क्लिक करते ही चैट स्क्रीन (for.html) खोलना
+    function openGroupChat(groupName, members) {
+      localStorage.setItem("active_chat_name", groupName);
+      localStorage.setItem("active_chat_user", members + " • Numbers Hidden");
+      window.location.href = "for.html";
+    }
+
+    // नया ग्रुप बनाना
+    function createNewGroup() {
+      const gName = prompt("Enter new Group Name:");
+      if (!gName || gName.trim() === "") return;
+
+      const gDesc = prompt("Enter short group description:", "Private ChatBox Group");
+      const list = document.getElementById("groupsList");
+
+      const newCard = document.createElement("div");
+      newCard.className = "group-card";
+      newCard.onclick = function() {
+        openGroupChat(gName.trim(), "1 Member");
+      };
+
+      newCard.innerHTML = `
+        <div class="group-left">
+          <div class="group-icon" style="background: linear-gradient(135deg, #1DE9B6, #2979FF);">👥</div>
+          <div class="group-info">
+            <h4>${gName.trim()}</h4>
+            <p>${gDesc || "New Group"}</p>
+          </div>
+        </div>
+        <span class="member-badge">New</span>
+      `;
+
+      list.appendChild(newCard);
+    }
+  </script>
+   <script src="theme.js"></script>
+    <script src="no_tap.js"></script>
+    <script src="app_global.js"></script>
+
+</body>
+</html>

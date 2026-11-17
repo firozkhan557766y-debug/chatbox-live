@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - My Profile</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: #f1f5f9; color: #0f172a; min-height: 100vh; padding-bottom: 40px; }
+    .top { background: linear-gradient(135deg, #1DE9B6, #2979FF); color: white; padding: 20px 18px 26px 18px; border-radius: 0 0 0px 0px; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 25px rgba(41, 121, 255, 0.22); }
+    .back-btn { width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); color: white; text-decoration: none; font-size: 22px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    .container { padding: 18px 16px; max-width: 450px; margin: 0 auto; }
+
+    /* प्रोफ़ाइल कार्ड और DP */
+    .card { background: white; border-radius: 26px; padding: 24px 20px; text-align: center; box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05); margin-bottom: 16px; }
+    .dp-wrap { position: relative; width: 94px; height: 94px; margin: 0 auto 14px auto; }
+    .dp-box { width: 100%; height: 100%; border-radius: 30px; background: linear-gradient(135deg, #1DE9B6, #2979FF); color: white; font-size: 38px; font-weight: 800; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; box-shadow: 0 8px 20px rgba(41, 121, 255, 0.25); }
+    .dp-box img { width: 100%; height: 100%; object-fit: cover; }
+    .cam-btn { position: absolute; bottom: -4px; right: -4px; width: 34px; height: 34px; border-radius: 12px; background: #0f172a; color: white; border: 2.5px solid white; display: flex; align-items: center; justify-content: center; font-size: 15px; overflow: hidden; cursor: pointer; }
+    .rm-dp { background: none; border: none; color: #ef4444; font-size: 12px; font-weight: bold; margin-top: 8px; cursor: pointer; display: none; }
+
+    .in-lbl { display: block; text-align: left; font-size: 12px; font-weight: 700; color: #64748b; margin: 12px 0 5px 2px; text-transform: uppercase; }
+    .in-box { width: 100%; padding: 12px 14px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 15px; outline: none; background: #f8fafc; }
+    .in-box:focus { border-color: #2979FF; background: white; }
+    .main-btn { width: 100%; padding: 14px; border: none; border-radius: 15px; background: linear-gradient(135deg, #1DE9B6, #2979FF); color: white; font-size: 15px; font-weight: 700; margin-top: 14px; cursor: pointer; }
+
+    /* QR और Recovery Key बॉक्स */
+    .qr-img { width: 140px; height: 140px; border-radius: 16px; padding: 8px; border: 1.5px solid #e2e8f0; margin: 12px auto; display: block; }
+    .key-box { background: #eff6ff; border: 1.5px dashed #2979FF; border-radius: 18px; padding: 14px; margin-top: 10px; }
+    .zoom-bg { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 3000; padding: 20px; }
+    .zoom-bg img { max-width: 100%; max-height: 80vh; border-radius: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="top">
+    <a href="setting.html" class="back-btn">‹</a>
+    <h2 style="font-size:21px;">👤 My Profile</h2>
+  </div>
+
+  <div class="container">
+    <!-- 1. प्रोफ़ाइल फोटो और नाम एडिट कार्ड -->
+    <div class="card">
+      <div class="dp-wrap">
+        <div class="dp-box my-dp" id="cardAvatar" onclick="zoomMyDP()">U</div>
+        <div class="cam-btn">📷
+          <input type="file" accept="image/*" onchange="updateMyDP(this)" style="position:absolute; inset:0; opacity:0; width:100%; height:100%;">
+        </div>
+      </div>
+      <h3 id="cardName" style="font-size:20px;">Guest User</h3>
+      <div id="cardHandle" style="font-size:14px; color:#2979FF; font-weight:700; margin-top:2px;">@guest_user</div>
+      <button class="rm-dp" id="removeDpBtn" onclick="removeMyDP()">🗑️ Remove Profile Photo</button>
+
+      <label class="in-lbl">Display Name</label>
+      <input type="text" id="nameField" class="in-box" placeholder="Enter your name">
+
+      <label class="in-lbl">Bio / About</label>
+      <input type="text" id="bioField" class="in-box" placeholder="Private & Secure on ChatBox">
+
+      <button class="main-btn" onclick="saveProfileInfo()">💾 Save Changes</button>
+    </div>
+
+    <!-- 2. लाइव QR कोड और @Username शेयर कार्ड -->
+    <div class="card">
+      <h4 style="font-size:16px;">📲 Share Private ID</h4>
+      <p style="font-size:12px; color:#64748b; margin-top:3px;">Friends can scan or copy your @username to connect</p>
+      <img id="qrImage" class="qr-img" src="" alt="QR Code">
+      <button class="main-btn" style="background:#0f172a; margin-top:6px;" onclick="copyUsername()">📋 Copy @Username</button>
+    </div>
+
+    <!-- 3. Secret Recovery Key कार्ड -->
+    <div class="card">
+      <h4 style="font-size:16px;">🔑 Secret Recovery Key</h4>
+      <p style="font-size:12px; color:#64748b; margin-top:3px;">Keep this safe to reset your password anytime</p>
+      <div class="key-box">
+        <div id="recKeyText" style="font-size:18px; font-weight:900; color:#1d4ed8; letter-spacing:2px;">CB-0000-0000</div>
+      </div>
+      <button class="main-btn" style="margin-top:10px;" onclick="copyRecoveryKey()">📋 Copy Recovery Key</button>
+    </div>
+  </div>
+
+  <!-- फुल-स्क्रीन DP ज़ूम व्यूअर -->
+  <div class="zoom-bg" id="zoomModal" onclick="this.style.display='none'">
+    <img id="zoomImg" src="">
+      <script>
+    let currentHandle = "@guest_user";
+
+    // बाहर चुनी गई थीम को प्रोफ़ाइल स्क्रीन पर लागू करना
+    const appThemes = [
+      "linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%)",
+      "linear-gradient(135deg, #8E2DE2 0%, #4A00E0 100%)",
+      "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)",
+      "linear-gradient(135deg, #0f172a 0%, #334155 100%)"
+    ];
+    let savedT = parseInt(localStorage.getItem("chatbox_theme_idx") || "0");
+    if (appThemes[savedT]) {
+      document.querySelector(".top").style.background = appThemes[savedT];
+      document.querySelector(".dp-box").style.background = appThemes[savedT];
+    }
+
+    window.onload = function() {
+      const name = localStorage.getItem("chatbox_name") || "Guest User";
+      const user = localStorage.getItem("chatbox_username") || "guest_user";
+      const bio = localStorage.getItem("chatbox_bio") || "Private & Secure on ChatBox 🛡️";
+      let recKey = localStorage.getItem("chatbox_recovery_key");
+
+      if (!recKey) {
+        recKey = "CB-" + Math.floor(1000 + Math.random() * 9000) + "-" + Math.floor(1000 + Math.random() * 9000);
+        localStorage.setItem("chatbox_recovery_key", recKey);
+      }
+
+      currentHandle = "@" + user;
+      document.getElementById("cardName").innerText = name;
+      document.getElementById("cardHandle").innerText = currentHandle;
+      document.getElementById("nameField").value = name;
+      document.getElementById("bioField").value = bio;
+      document.getElementById("recKeyText").innerText = recKey;
+
+      // असली QR कोड जनरेट करना
+      document.getElementById("qrImage").src = "https://qrserver.com" + encodeURIComponent(currentHandle);
+
+      // सेव की गई प्रोफ़ाइल फोटो (DP) दिखाना
+      const savedDp = localStorage.getItem("chatbox_dp");
+      if (savedDp) {
+        document.getElementById("cardAvatar").innerHTML = `<img src="${savedDp}">`;
+        document.getElementById("removeDpBtn").style.display = "inline-block";
+      } else {
+        document.getElementById("cardAvatar").innerText = name.charAt(0).toUpperCase();
+      }
+    };
+
+    function updateMyDP(el) {
+      const f = el.files.item(0);
+      if (!f) return;
+      const r = new FileReader();
+      r.onload = function(e) {
+        const imgData = e.target.result;
+        localStorage.setItem("chatbox_dp", imgData);
+        document.getElementById("cardAvatar").innerHTML = `<img src="${imgData}">`;
+        document.getElementById("removeDpBtn").style.display = "inline-block";
+
+        // लाइव सर्वर पर DP अपडेट करना
+        if (!window.location.href.includes("7700")) {
+          fetch("/api/update_dp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user: localStorage.getItem("chatbox_username"), dp: imgData })
+          });
+        }
+        alert("✅ Profile Photo Updated Everywhere!");
+      };
+      r.readAsDataURL(f);
+    }
+
+    function removeMyDP() {
+      if (confirm("Remove your profile photo?")) {
+        localStorage.removeItem("chatbox_dp");
+        const name = localStorage.getItem("chatbox_name") || "U";
+        document.getElementById("cardAvatar").innerHTML = name.charAt(0).toUpperCase();
+        document.getElementById("removeDpBtn").style.display = "none";
+      }
+    }
+
+    function zoomMyDP() {
+      const savedDp = localStorage.getItem("chatbox_dp");
+      if (savedDp) {
+        document.getElementById("zoomImg").src = savedDp;
+        document.getElementById("zoomModal").style.display = "flex";
+      }
+    }
+
+    function saveProfileInfo() {
+      const newName = document.getElementById("nameField").value.trim();
+      const newBio = document.getElementById("bioField").value.trim();
+      if (!newName) { alert("Please enter your name!"); return; }
+
+      localStorage.setItem("chatbox_name", newName);
+      localStorage.setItem("chatbox_bio", newBio);
+      document.getElementById("cardName").innerText = newName;
+      if (!localStorage.getItem("chatbox_dp")) {
+        document.getElementById("cardAvatar").innerText = newName.charAt(0).toUpperCase();
+      }
+      alert("✅ Profile Updated!");
+    }
+
+    function copyUsername() {
+      navigator.clipboard.writeText(currentHandle);
+      alert("Copied: " + currentHandle);
+    }
+
+    function copyRecoveryKey() {
+      const k = document.getElementById("recKeyText").innerText;
+      navigator.clipboard.writeText(k);
+      alert("🔑 Recovery Key Copied: " + k);
+    }
+  </script>
+  <script src="dp.js"></script>
+   <script src="theme.js"></script>
+    <script src="no_tap.js"></script>
+    <script src="app_global.js"></script>
+
+</body>
+</html>
+
+  </div>

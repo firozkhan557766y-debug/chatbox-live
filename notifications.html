@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Notifications</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .top-bar {
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      padding: 20px;
+      
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-title {
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 20px 15px;
+      flex: 1;
+    }
+
+    .section-label {
+      font-size: 13px;
+      font-weight: bold;
+      color: #64748b;
+      margin: 5px 0 12px 5px;
+      text-transform: uppercase;
+    }
+
+    .notif-card {
+      background: white;
+      padding: 16px;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .notif-top {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .notif-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 15px;
+      background: #eff6ff;
+      color: #2979FF;
+      font-size: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .notif-text h4 {
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    .notif-text p {
+      font-size: 13px;
+      color: #64748b;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .accept-btn {
+      flex: 1;
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .delete-btn {
+      flex: 1;
+      background: #fee2e2;
+      color: #ef4444;
+      border: none;
+      padding: 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="header-left">
+      <a href="third.html" style="width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; text-decoration: none;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6"/>
+        </svg>
+      </a>
+      <div class="header-title">🔔 Notifications</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="section-label">Chat Requests</div>
+    <div id="requestsContainer"></div>
+  </div>
+
+  <script>
+    const defaultReqs = [
+      {
+        id: "demo_1",
+        name: "Neha Sharma",
+        username: "@neha_writes"
+      }
+    ];
+
+    function getRequests() {
+      const saved = localStorage.getItem("chatbox_requests");
+      if (saved !== null) {
+        return JSON.parse(saved);
+      }
+      localStorage.setItem("chatbox_requests", JSON.stringify(defaultReqs));
+      return defaultReqs;
+    }
+
+    function renderRequests() {
+      const list = getRequests();
+      const container = document.getElementById("requestsContainer");
+      container.innerHTML = "";
+
+      if (list.length === 0) {
+        container.innerHTML = "<p style='text-align:center; color:#94a3b8; margin-top:40px;'>No new chat requests 🎉</p>";
+        return;
+      }
+
+      list.forEach((req, index) => {
+        const card = document.createElement("div");
+        card.className = "notif-card";
+        card.innerHTML = `
+          <div class="notif-top">
+            <div class="notif-icon">💬</div>
+            <div class="notif-text">
+              <h4>${req.username}</h4>
+              <p><strong>${req.name}</strong> wants to chat with you.</p>
+            </div>
+          </div>
+          <div class="btn-group">
+            <button class="accept-btn" onclick="acceptRequest(${index})">✓ Accept</button>
+            <button class="delete-btn" onclick="deleteRequest(${index})">✕ Decline</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function acceptRequest(index) {
+      let list = getRequests();
+      const person = list[index];
+
+      list.splice(index, 1);
+      localStorage.setItem("chatbox_requests", JSON.stringify(list));
+      let friends = JSON.parse(localStorage.getItem("chatbox_accepted_friends") || "[]");
+      let cleanUser = person.username.replace("@", "").toLowerCase();
+      if (!friends.includes(cleanUser)) {
+        friends.push(cleanUser);
+        localStorage.setItem("chatbox_accepted_friends", JSON.stringify(friends));
+      }
+  if (typeof addFriendToDirectMessages === "function") {
+    addFriendToDirectMessages(person.name, person.username);
+  }
+  if (window.socket) {
+    window.socket.emit("accept_request", {
+      to: person.username.startsWith("@") ? person.username : "@" + person.username,
+      from: "@" + (localStorage.getItem("chatbox_username") || "me"),
+      name: localStorage.getItem("chatbox_name") || "Friend"
+    });
+  }
+
+  let dList = JSON.parse(localStorage.getItem("cb_direct_friends") || "[]");
+  if (!dList.some(x => x.username === person.username)) {
+    dList.unshift({ name: person.name, username: person.username });
+    localStorage.setItem("cb_direct_friends", JSON.stringify(dList));
+  }
+  const cleanKey = person.name.trim().toLowerCase().replace(/[^a-z0-9]/g, "_");
+  localStorage.removeItem("cb_meta_" + cleanKey);
+  localStorage.removeItem("cb_meta_" + person.username.toLowerCase());
+
+      localStorage.setItem("active_chat_name", person.name);
+      localStorage.setItem("active_chat_user", person.username);
+      window.location.href = "for.html";
+    }
+
+    function deleteRequest(index) {
+      let list = getRequests();
+      list.splice(index, 1);
+      localStorage.setItem("chatbox_requests", JSON.stringify(list));
+      renderRequests();
+    }
+  if (getRequests().length === 0) {
+    localStorage.setItem("chatbox_requests", JSON.stringify([
+      { name: "Kabir Singh", username: "@kabir_s", time: "Just now" }
+    ]));
+  }
+
+    window.onload = renderRequests;
+  </script>
+<script src="live.js"></script>
+<script src="theme.js"></script>
+ <script src="no_tap.js"></script>
+ <script src="app_global.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html>
+<head>
+  
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox</title>
+  <style>
+  
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: sans-serif; }
+    body { background: #eef2f6; height: 100vh; display: flex; flex-direction: column; overflow: hidden; background-size: cover; background-position: center; }
+    .header { background: linear-gradient(135deg, #00d2ff, #2979FF); color: white; padding: 14px; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 0px 0px; z-index: 20; }
+    .btn { width: 38px; height: 38px; border-radius: 12px; background: rgba(255,255,255,0.22); border: none; color: white; font-size: 18px; display: flex; justify-content: center; align-items: center; text-decoration: none; }
+    .menu { position: fixed; top: 70px; right: 14px; background: white; border-radius: 16px; width: 195px; padding: 6px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); display: none; flex-direction: column; z-index: 99; }
+    .m-item { padding: 12px; border: none; background: none; text-align: left; font-size: 14px; font-weight: bold; color: #1e293b; text-decoration: none; display: block; width: 100%; }
+      .chat { flex: 1; padding: 12px 14px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+  .msg { max-width: 78%; padding: 6px 10px 6px 11px; border-radius: 13px; font-size: 14.5px; line-height: 1.35; position: relative; transition: 0.15s; word-wrap: break-word; box-shadow: 0 1px 1.5px rgba(0,0,0,0.12); user-select: none; -webkit-user-select: none; }
+  .in { background: var(--card-bg, #ffffff); align-self: flex-start; color: var(--text-main, #1e293b); border-top-left-radius: 2px; }
+  .out { background: var(--primary-grad, linear-gradient(135deg, #2979FF, #1d4ed8)); align-self: flex-end; color: #ffffff; border-top-right-radius: 2px; }
+  .q-box { background: rgba(0, 0, 0, 0.12); border-left: 3.5px solid #38bdf8; border-radius: 7px; padding: 5px 8px; font-size: 12.5px; margin-bottom: 5px; cursor: pointer; line-height: 1.3; }
+  .out .q-box { background: rgba(0, 0, 0, 0.18); border-left-color: #ffffff; }
+    .msg span, .msg small, .msg .time { font-size: 10px !important; opacity: 0.75; float: right; margin: 5px 0 -2px 8px; }
+
+
+    .glow { box-shadow: 0 0 0 3px #1DE9B6 !important; transform: scale(1.04); }
+    .tray { position: fixed; bottom: 80px; left: 14px; right: 14px; background: white; border-radius: 18px; padding: 14px; display: none; justify-content: space-around; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 99; }
+    .rep-bar { background: white; margin: 0 12px -5px 12px; padding: 8px 14px; border-radius: 14px 14px 0 0; border-left: 4px solid #2979FF; display: none; justify-content: space-between; font-size: 13px; }
+    .footer { padding: 10px 12px; display: flex; gap: 8px; align-items: center; }
+    .pill { flex: 1; background: white; border-radius: 26px; padding: 5px 10px; display: flex; align-items: center; gap: 6px; border: 1.5px solid #cbd5e1; }
+    .box { flex: 1; padding: 6px; font-size: 15px; outline: none; color: #1e293b; max-height: 80px; overflow-y: auto; }
+    .box:empty:before { content: "Type a message..."; color: #94a3b8; }
+    .send { width: 45px; height: 45px; border-radius: 50%; background: #2979FF; border: none; color: white; font-size: 18px; flex-shrink: 0; }
+    .call-bg { position: fixed; inset: 0; background: #0f172a; color: white; display: none; flex-direction: column; justify-content: space-around; align-items: center; z-index: 999; text-align: center; }
+  </style>
+  <script>
+  (function lockInstantBubbleColor() {
+    const savedCol = localStorage.getItem("chatbox_custom_bubble_bg");
+    if (!savedCol) return;
+
+    // 1. मुख्य CSS के बाद सबसे मजबूत स्टाइल लगाना
+    const st = document.createElement("style");
+    st.innerHTML = `#chatArea .msg.out, .chat .msg.out { background: ${savedCol} !important; background-image: ${savedCol.includes("gradient") ? savedCol : "none"} !important; color: #ffffff !important; }`;
+    document.head.appendChild(st);
+
+    // 2. बिना किसी देरी (0ms) के बबल बनते ही उसका इनलाइन रंग बदलना
+    new MutationObserver(() => {
+      document.querySelectorAll("#chatArea .msg.out, .chat .msg.out").forEach(b => {
+        if (b.dataset.cLocked !== savedCol) {
+          b.dataset.cLocked = savedCol;
+          b.style.setProperty("background", savedCol, "important");
+        }
+      });
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  })();
+</script>
+
+</head>
+<body onclick="closeAll()">
+
+  <div class="header" onclick="event.stopPropagation()">
+    <div style="display:flex; align-items:center; gap:10px;">
+      <a href="third.html" class="btn">‹</a>
+             <div onclick="window.location.href='contact_info.html'" style="cursor:pointer;"><b id="cName">Aarav Verma</b><br><small id="cUser">@aarav_v</small></div>
+
+    </div>
+    <div style="display:flex; gap:6px;">
+      <button class="btn" onclick="openCall('Audio')">📞</button>
+      <button class="btn" onclick="openCall('Video')">📹</button>
+      <button class="btn" onclick="toggle('menuBox', event)">⋮</button>
+    </div>
+  </div>
+
+  <div class="menu" id="menuBox" onclick="event.stopPropagation()">
+    <a href="wallpaper.html" class="m-item">🖼️ Wallpaper</a>
+    <a href="stickers.html" class="m-item">🎭 Stickers</a>
+    <button class="m-item" onclick="clearAll()">🗑️ Clear Chat</button>
+    <button class="m-item" style="color:red;" onclick="blockNow()">🚫 Block User</button>
+  </div>
+
+  <div class="chat" id="chatArea">
+    
+  </div>
+
+  <div class="tray" id="trayBox" onclick="event.stopPropagation()">
+    <div style="position:relative; text-align:center; width:65px; font-weight:bold; font-size:13px;">🖼️<br>Photo
+      <input type="file" accept="image/*" onchange="pickImg(this)" style="position:absolute; inset:0; opacity:0;">
+    </div>
+    <div style="position:relative; text-align:center; width:65px; font-weight:bold; font-size:13px;">📄<br>File
+      <input type="file" accept="*/*" onchange="pickDoc(this)" style="position:absolute; inset:0; opacity:0;">
+    </div>
+    <a href="polls.html" class="m-item" style="text-align:center; width:65px; padding:0;">📊<br>Poll</a>
+  </div>
+
+  <div class="rep-bar" id="repBar" onclick="event.stopPropagation()">
+    <span id="repTxt" style="color:#2979FF; font-weight:bold;"></span>
+    <button onclick="cancelRep()" style="border:none; background:none; font-size:16px;">✕</button>
+  </div>
+
+  <div class="footer" onclick="event.stopPropagation()">
+    <div class="pill">
+      <button onclick="toggle('trayBox', event)" style="border:none; background:none; font-size:18px;">📎</button>
+      <div id="typeBox" class="box" contenteditable="true"></div>
+    </div>
+    <button class="send" onclick="sendNow()">➤</button>
+  </div>
+
+  <div class="call-bg" id="callScreen">
+    <div id="cType">🔒 Encrypted Call</div>
+  
+<div>
+  <h2 id="cName">Friend</h2>
+  <p id="cUser">@friend</p>
+</div>
+
+    <button onclick="endCall()" style="width:60px; height:60px; border-radius:50%; background:red; border:none; color:white; font-size:24px;">📵</button>
+      <script>
+    let pName = localStorage.getItem("active_chat_name") || "Aarav Verma";
+    let pUser = localStorage.getItem("active_chat_user") || "@aarav_v";
+    document.getElementById("cName").innerText = pName;
+    document.getElementById("cUser").innerText = pUser;
+
+    let w = localStorage.getItem("chatbox_wall");
+    if (w) document.body.style.background = w;
+
+    const themes = ["linear-gradient(135deg,#1DE9B6,#2979FF)", "linear-gradient(135deg,#8E2DE2,#4A00E0)", "linear-gradient(135deg,#11998e,#38ef7d)", "linear-gradient(135deg,#0f172a,#334155)"];
+    let t = parseInt(localStorage.getItem("chatbox_theme_idx") || "0");
+    if (themes[t]) {
+      document.querySelector(".header").style.background = themes[t];
+      document.querySelector(".send").style.background = themes[t];
+    }
+
+    let repText = "", repId = "", selEl = null;
+
+    function toggle(id, e) {
+      e.stopPropagation();
+      let el = document.getElementById(id);
+      let show = el.style.display !== "flex";
+      closeAll();
+      if (show) el.style.display = "flex";
+    }
+
+    function closeAll() {
+      document.getElementById("menuBox").style.display = "none";
+      document.getElementById("trayBox").style.display = "none";
+    }
+
+    function setReply(el) {
+      repText = el.innerText.split("\n").pop().substring(0, 40);
+      repId = el.id;
+      document.getElementById("repTxt").innerText = "↩ " + repText;
+      document.getElementById("repBar").style.display = "flex";
+      document.getElementById("typeBox").focus();
+    }
+
+    function cancelRep() { repText = ""; repId = ""; document.getElementById("repBar").style.display = "none"; }
+
+    function jump(id, e) {
+      e.stopPropagation();
+      let el = document.getElementById(id);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("glow");
+      setTimeout(() => el.classList.remove("glow"), 1500);
+    }
+
+    
+
+        function sendNow() {
+      let box = document.getElementById("typeBox");
+      let txt = (box.innerText || box.value || "").trim();
+      if (!txt) return;
+      const whoName = localStorage.getItem("active_chat_name") || "Friend";
+      let html = repText
+        ? `<div class="q-box" onclick="jump('${repId}', event)"><div style="font-weight:700;font-size:11.5px;color:#38bdf8;margin-bottom:2px;">${whoName}</div><div>${repText}</div></div>${txt}`
+        : txt;
+      cancelRep();
+      addMsg(html, "out");
+      box.innerText = "";
+      if (box.value !== undefined) box.value = "";
+    }
+
+    function addMsg(html, cls) {
+      let area = document.getElementById("chatArea");
+      let d = document.createElement("div");
+      d.className = "msg " + cls;
+      d.id = "m_" + Date.now();
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      const tickHtml = cls === "out" ? ` <span style="color:#38bdf8;font-weight:700;">✓✓</span>` : "";
+      d.innerHTML = `${html}<span style="font-size:10px;opacity:0.78;float:right;margin:5px 0 -2px 8px;line-height:1;">${timeStr}${tickHtml}</span>`;
+      d.onclick = () => setReply(d);
+      area.appendChild(d);
+      area.scrollTop = area.scrollHeight;
+    }
+
+    function setupGestures(el) {
+      let sx = 0, timer;
+      el.ontouchstart = e => {
+        sx = e.touches.item(0).clientX;
+        timer = setTimeout(() => openHoldMenu(el), 500);
+      };
+      el.ontouchmove = e => {
+        clearTimeout(timer);
+        let dx = e.touches.item(0).clientX - sx;
+        if (dx > 0 && dx < 70) el.style.transform = `translateX(${dx}px)`;
+      };
+      el.ontouchend = e => {
+        clearTimeout(timer);
+        el.style.transform = "translateX(0)";
+        if (e.changedTouches.item(0).clientX - sx > 40) setReply(el);
+      };
+    }
+    setupGestures(document.getElementById("m1"));
+
+    function openHoldMenu(el) {
+      selEl = el; cancelRep();
+      let old = document.getElementById("holdPop");
+      if (old) old.remove();
+      let bg = document.createElement("div");
+      bg.id = "holdPop";
+      bg.style.cssText = "position:fixed; inset:0; background:rgba(0,0,0,0.5); display:flex; align-items:flex-end; z-index:99999;";
+      bg.onclick = () => bg.remove();
+      bg.innerHTML = `<div onclick="event.stopPropagation()" style="background:white; width:100%; border-radius:22px 22px 0 0; padding:18px; display:flex; flex-direction:column; gap:10px;">
+        <button onclick="hideMsg()" style="padding:14px; border-radius:12px; border:none; font-weight:bold; background:#eff6ff; color:#2979FF; text-align:left;">🔐 Hide in Secret Vault</button>
+        <button onclick="delMsg()" style="padding:14px; border-radius:12px; border:none; font-weight:bold; background:#fee2e2; color:#ef4444; text-align:left;">🗑️ Delete Message</button>
+      </div>`;
+      document.body.appendChild(bg);
+    }
+
+    function hideMsg() {
+      let l = JSON.parse(localStorage.getItem("chatbox_vault") || "[]");
+      l.unshift("💬 [" + pName + "]: " + selEl.innerText.replace(/\n/g, " "));
+      localStorage.setItem("chatbox_vault", JSON.stringify(l));
+      selEl.remove(); document.getElementById("holdPop").remove();
+      alert("🔐 Hidden in Secret Vault!");
+    }
+
+    function delMsg() { selEl.remove(); document.getElementById("holdPop").remove(); }
+
+    function pickImg(el) {
+      closeAll();
+      let f = el.files.item(0);
+      if (!f) return;
+      let u = URL.createObjectURL(f);
+      addMsg(`<img src="${u}" onclick="window.open('${u}')" style="width:100%; max-width:210px; border-radius:10px;">`, "out");
+    }
+
+    function pickDoc(el) {
+      closeAll();
+      let f = el.files.item(0);
+      if (!f) return;
+      let u = URL.createObjectURL(f);
+      addMsg(`<div onclick="window.open('${u}')" style="background:rgba(255,255,255,0.22); padding:10px; border-radius:10px;">📄 <b>${f.name}</b></div>`, "out");
+    }
+
+    let cInt;
+    function openCall(t) {
+      closeAll();
+      document.getElementById("cType").innerText = "🔒 " + t + " Call";
+      document.getElementById("cTitle").innerText = pName;
+      document.getElementById("cTime").innerText = "Ringing...";
+      document.getElementById("callScreen").style.display = "flex";
+      let s = 0;
+      setTimeout(() => { cInt = setInterval(() => { s++; document.getElementById("cTime").innerText = "Connected • " + s + "s"; }, 1000); }, 2000);
+    }
+
+    function endCall() { clearInterval(cInt); document.getElementById("callScreen").style.display = "none"; }
+    function clearAll() { closeAll(); document.getElementById("chatArea").innerHTML = ""; }
+    function blockNow() {
+      closeAll();
+      let l = JSON.parse(localStorage.getItem("chatbox_blocked") || "[]");
+      l.unshift({ username: pUser, reason: "Blocked" });
+      localStorage.setItem("chatbox_blocked", JSON.stringify(l));
+      alert(pName + " Blocked!"); window.location.href = "third.html";
+    }
+      const chatPartner = localStorage.getItem("active_chat_user") || "@friend";
+  const chatStoreKey = "chat_history_" + chatPartner;
+
+  // पेज खुलते ही पुराने सेव किए हुए सभी मैसेज वापस दिखाना
+  function loadSavedMessages() {
+    const box = document.getElementById("chatMessages") || document.getElementById("messages") || document.querySelector(".messages, .chat-body");
+    if (!box) return;
+
+    const saved = JSON.parse(localStorage.getItem(chatStoreKey) || "[]");
+    if (saved.length > 0) {
+      box.innerHTML = "";
+      saved.forEach(m => {
+        const isMe = m.sender === "me";
+        const align = isMe ? "flex-end" : "flex-start";
+        const bg = isMe ? "linear-gradient(135deg,#1DE9B6,#2979FF)" : "#ffffff";
+        const col = isMe ? "#ffffff" : "#0f172a";
+        box.insertAdjacentHTML("beforeend", `
+          <div style="display:flex; justify-content:${align}; margin-bottom:8px;">
+            <div style="max-width:75%; padding:10px 14px; border-radius:18px; background:${bg}; color:${col}; font-size:14px; box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+              <div>${m.text}</div>
+              <div style="font-size:10px; opacity:0.75; text-align:right; margin-top:3px;">${m.time || ""}</div>
+            </div>
+          </div>
+        `);
+      });
+      box.scrollTop = box.scrollHeight;
+    }
+  }
+
+  // नया मैसेज भेजते ही उसे स्थायी रूप से सेव करना
+  window.saveMyChatMessage = function (text) {
+    if (!text) return;
+    let saved = JSON.parse(localStorage.getItem(chatStoreKey) || "[]");
+    saved.push({
+      sender: "me",
+      text: text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    });
+    localStorage.setItem(chatStoreKey, JSON.stringify(saved));
+    loadSavedMessages();
+  };
+
+  loadSavedMessages();
+window.addEventListener("DOMContentLoaded", function () {
+  const area = document.getElementById("chatArea");
+  const saved = localStorage.getItem("cb_saved_chat_" + (localStorage.getItem("active_chat_user") || "@friend"));
+  if (area && saved) { area.innerHTML = saved; area.scrollTop = area.scrollHeight; }
+});
+// किसी एक मैसेज को दबाकर रखने (Long-Press) पर डिलीट करने का सिस्टम
+function saveCurrentChatState() {
+  const area = document.getElementById("chatArea");
+  if (area) {
+    localStorage.setItem("cb_saved_chat_" + (localStorage.getItem("active_chat_user") || "@friend"), area.innerHTML);
+  }
+}
+
+// पुराने लोड हुए मैसेजों पर भी क्लिक और लॉन्ग-प्रेस दोबारा चालू करना
+window.addEventListener("DOMContentLoaded", function () {
+  const area = document.getElementById("chatArea");
+  const saved = localStorage.getItem("cb_saved_chat_" + (localStorage.getItem("active_chat_user") || "@friend"));
+  if (area && saved) {
+    area.innerHTML = saved;
+    area.scrollTop = area.scrollHeight;
+  }
+
+
+  
+});
+
+  </script>
+  <script>
+  (function () {
+    const partner = (localStorage.getItem("active_chat_user") || "@friend").toLowerCase();
+    const storeKey = "cb_perm_chat_" + partner;
+    const area = document.getElementById("chatArea");
+    if (!area) return;
+
+    // 1. चैट खुलते ही पुराने सभी सेव किए हुए मैसेज वापस लाना
+    const savedHtml = localStorage.getItem(storeKey);
+    if (savedHtml) {
+      area.innerHTML = savedHtml;
+      area.scrollTop = area.scrollHeight;
+    }
+
+    // 2. जैसे ही चैट में कोई भी नया मैसेज जुड़े, रिप्लाई लगे या डिलीट हो—तुरंत स्थायी सेव करना
+    const observer = new MutationObserver(() => {
+      localStorage.setItem(storeKey, area.innerHTML);
+    });
+    observer.observe(area, { childList: true, subtree: true, characterData: true });
+  })();
+</script>
+ <script src="no_tap.js"></script>
+ <script src="calling.js?v=11"></script>
+  <script src=".msg_actions.js?v=12"></script>
+  <script src="live.js"></script>
+  <script src="theme.js"></script>
+  <script src="chat_input.js?v=5"></script>
+  <script src="chat_header_actions.js?v=7"></script>
+    <script>
+    (function saveLatestMsgOnSend() {
+      const rawP = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace(/@/g, "");
+      const rawN = (localStorage.getItem("active_chat_name") || "").toLowerCase().trim();
+      let lastTypedText = "";
+
+      document.addEventListener("input", function (e) {
+        if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) {
+          if (e.target.type !== "file" && e.target.value.trim()) {
+            lastTypedText = e.target.value.trim();
+          }
+        }
+      }, true);
+
+      function commitLastActivity(text, type) {
+        const finalTxt = (text || lastTypedText || "").trim();
+        if (!finalTxt) return;
+        const payload = JSON.stringify({
+          text: finalTxt,
+          type: type || "text",
+          sender: "me",
+          time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          ts: Date.now()
+        });
+        if (rawP) localStorage.setItem("cb_latest_msg_" + rawP, payload);
+        if (rawN) localStorage.setItem("cb_latest_msg_" + rawN, payload);
+        lastTypedText = "";
+      }
+
+      // 1. टेक्स्ट मैसेज भेजने पर सेव करना
+      document.addEventListener("pointerdown", function (e) {
+        if (e.target.closest("button") && lastTypedText) {
+          commitLastActivity(lastTypedText, "text");
+        }
+      }, true);
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Enter" && lastTypedText) {
+          commitLastActivity(lastTypedText, "text");
+        }
+      }, true);
+
+      // 2. Photo, Video, Audio या Document चुनने पर तुरंत सेव करना
+      document.addEventListener("change", function (e) {
+        if (e.target && e.target.type === "file" && e.target.files && e.target.files.length > 0) {
+          const file = e.target.files;
+          const mime = (file.type || "").toLowerCase();
+          const fName = file.name || "Document";
+
+          if (mime.startsWith("image/")) {
+            commitLastActivity("Photo", "image");
+          } else if (mime.startsWith("video/")) {
+            commitLastActivity("Video", "video");
+          } else if (mime.startsWith("audio/")) {
+            commitLastActivity("Voice message", "audio");
+          } else {
+            commitLastActivity("📄 " + fName, "document");
+          }
+        }
+      }, true);
+    })();
+  </script>
+<style>
+  /* केवल असली चैट लिस्ट में नीचे जगह देना ताकि फोटो कीबोर्ड के नीचे न जाए */
+  #chatBox, .messages, .chat-messages, #messages {
+    padding-bottom: 85px !important;
+  }
+  /* पुराना इनपुट बार गलती से ऊपर न दिखे, उसे छिपाए रखना */
+  .input-area, .chat-input-box, .old-input {
+    display: none !important;
+  }
+</style>
+
+
+<script>
+  (function smoothChatExperience() {
+    const msgInp = document.querySelector("input[type='text'], textarea");
+
+    function scrollAllDown() {
+      // पूरे पेज और हर संभावित चैट बॉक्स को सबसे नीचे स्क्रॉल करना
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      document.body.scrollTop = document.body.scrollHeight;
+      document.querySelectorAll("#chatBox, .messages, .chat-messages, #messages, main, div").forEach(el => {
+        if (el.scrollHeight > el.clientHeight + 40) {
+          el.scrollTop = el.scrollHeight;
+        }
+      });
+    }
+
+    // 1. नया मैसेज या फोटो जुड़ते ही तुरंत और फोटो लोड होने पर दोबारा स्क्रॉल करना
+    const obs = new MutationObserver(() => {
+      scrollAllDown();
+      document.querySelectorAll("img").forEach(img => {
+        if (!img.dataset.bound) {
+          img.dataset.bound = "1";
+          img.addEventListener("load", scrollAllDown);
+        }
+      });
+    });
+    obs.observe(document.body, { childList: true, subtree: true });
+    setTimeout(scrollAllDown, 250);
+
+    // 2. कीबोर्ड खुलने पर भी चैट को तुरंत ऊपर खिसकाना ताकि फोटो कीबोर्ड के नीचे न जाए
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", () => {
+        setTimeout(scrollAllDown, 60);
+      });
+    }
+
+    // 3. सेंड बटन दबाते ही मैसेज भेजना, इनपुट बॉक्स को तुरंत खाली करना और कीबोर्ड खुला रखना
+    document.querySelectorAll("button").forEach(b => b.setAttribute("tabindex", "-1"));
+
+    document.addEventListener("touchstart", function (e) {
+      const sendBtn = e.target.closest("button");
+      if (!sendBtn || !msgInp) return;
+
+      if (sendBtn.getBoundingClientRect().top > window.innerHeight * 0.55) {
+        e.preventDefault();
+        sendBtn.click();
+        // मैसेज जाने के तुरंत बाद इनपुट बॉक्स खाली करना और कीबोर्ड फोकस बनाए रखना
+                setTimeout(() => {
+          document.querySelectorAll("input[type='text'], textarea").forEach(inp => {
+            inp.value = "";
+            inp.dispatchEvent(new Event("input", { bubbles: true }));
+          });
+          const visibleInp = Array.from(document.querySelectorAll("input[type='text'], textarea"))
+            .find(el => el.offsetParent !== null);
+          if (visibleInp) visibleInp.focus();
+          scrollAllDown();
+        }, 30);
+
+      }
+    }, { passive: false });
+  })();
+</script>
+<style>
+  /* चैट बबल्स को असली WhatsApp जैसा पतला, कॉम्पैक्ट और स्लिम बनाना */
+  .chat {
+    padding: 10px 12px !important;
+    gap: 4px !important;
+  }
+  .chat .msg {
+    padding: 6px 10px 6px 11px !important;
+    border-radius: 13px !important;
+    font-size: 14.5px !important;
+    line-height: 1.35 !important;
+    max-width: 78% !important;
+    width: fit-content !important;
+    box-shadow: 0 1px 1.5px rgba(0, 0, 0, 0.14) !important;
+  }
+  .chat .msg.in {
+    border-top-left-radius: 2px !important;
+  }
+  .chat .msg.out {
+    border-top-right-radius: 2px !important;
+  }
+  /* समय और टिक को टेक्स्ट के ठीक दाईं तरफ नीचे कोने पर लाना */
+  .chat .msg > div:last-child,
+  .chat .msg > span:last-child,
+  .chat .msg .time {
+    display: inline-block !important;
+    float: right !important;
+    font-size: 10px !important;
+    opacity: 0.78 !important;
+    margin: 5px 0 -2px 8px !important;
+    line-height: 1 !important;
+  }
+  /* रिप्लाई कोट बॉक्स को असली WhatsApp जैसा सुंदर बनाना */
+  .chat .msg .q-box {
+    display: block !important;
+    float: none !important;
+    background: rgba(0, 0, 0, 0.14) !important;
+    border-left: 3.5px solid #38bdf8 !important;
+    border-radius: 7px !important;
+    padding: 5px 8px !important;
+    margin-bottom: 5px !important;
+    font-size: 12.5px !important;
+    line-height: 1.3 !important;
+  }
+  .chat .msg.out .q-box {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border-left-color: #ffffff !important;
+  }
+</style>
+<script>
+  (function makeBubblesSlimNow() {
+    function stylizeAllBubbles() {
+      document.querySelectorAll(".chat .msg").forEach(m => {
+        // 1. बबल का पुराना मोटा इनलाइन स्टाइल हटाकर पतला WhatsApp आकार देना
+        m.style.setProperty("padding", "6px 10px 6px 11px", "important");
+        m.style.setProperty("border-radius", "13px", "important");
+        m.style.setProperty("font-size", "14.5px", "important");
+        m.style.setProperty("line-height", "1.35", "important");
+        m.style.setProperty("width", "fit-content", "important");
+        m.style.setProperty("max-width", "78%", "important");
+
+        if (m.classList.contains("out")) {
+          m.style.setProperty("border-top-right-radius", "2px", "important");
+        } else {
+          m.style.setProperty("border-top-left-radius", "2px", "important");
+        }
+
+        // 2. समय (Time) वाले आखिरी बॉक्स को नीचे से उठाकर बगल में कोने पर बैठाना
+        const lastEl = m.lastElementChild;
+        if (lastEl && !lastEl.classList.contains("q-box") && lastEl.innerText && lastEl.innerText.length < 18) {
+          lastEl.style.setProperty("display", "inline-block", "important");
+          lastEl.style.setProperty("float", "right", "important");
+          lastEl.style.setProperty("font-size", "10px", "important");
+          lastEl.style.setProperty("margin", "5px 0 -2px 8px", "important");
+          lastEl.style.setProperty("opacity", "0.8", "important");
+        }
+      });
+    }
+
+    stylizeAllBubbles();
+    const chatArea = document.querySelector(".chat");
+    if (chatArea) {
+      new MutationObserver(stylizeAllBubbles).observe(chatArea, { childList: true, subtree: true });
+    }
+  })();
+</script>
+
+<style>
+  /* बबल को सीधा Flexbox बनाना ताकि टेक्स्ट हमेशा बाईं तरफ और समय दाईं तरफ रहे */
+  #chatArea .msg {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    align-items: flex-end !important;
+    justify-content: space-between !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    direction: ltr !important;
+    text-align: left !important;
+  }
+
+  /* बबल के अंदर के मुख्य टेक्स्ट को बाईं तरफ और गहरा रखना */
+  #chatArea .msg > span:first-of-type {
+    order: 1 !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px !important;
+    text-shadow: 0 0px 0px rgba(0, 0, 0, 0.) !important;
+    word-break: break-word !important;
+  }
+
+  #chatArea .msg.in > span:first-of-type {
+    color: #0f172a !important;
+    text-shadow: none !important;
+  }
+
+  /* समय और टिक को हमेशा दाईं तरफ निचले कोने पर लॉक करना */
+  #chatArea .msg > span:last-of-type {
+    order: 2 !important;
+    float: none !important;
+    margin: 0 0 -1px auto !important;
+    font-size: 10.5px !important;
+    opacity: 0.9 !important;
+    white-space: nowrap !important;
+  }
+
+  /* यदि बबल में रिप्लाई कोट बॉक्स (.q-box) है तो उसे सबसे ऊपर पूरी चौड़ाई में रखना */
+  #chatArea .msg .q-box {
+    order: 0 !important;
+    width: 100% !important;
+    flex-basis: 100% !important;
+    margin-bottom: 4px !important;
+  }
+    /* आपके भेजे गए (Sent) बबल का रंग बदलने के लिए */
+  #chatArea .msg.out {
+    background: blue !important; /* असली WhatsApp डार्क ग्रीन (आप यहाँ कोई भी रंग कोड लिख सकते हैं) */
+    color: #ffffff !important;
+  }
+
+  /* सामने वाले से आए (Received) बबल का रंग बदलने के लिए */
+  #chatArea .msg.in {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+</style>
+
+  <script>
+  (function attachBubbleColorToWallpaper() {
+    const colors = [
+      { name: "WhatsApp Green", val: "#005c4b" },
+      { name: "Emerald", val: "linear-gradient(135deg, #008069, #10b981)" },
+      { name: "Ocean Blue", val: "linear-gradient(135deg, #0284c7, #2563eb)" },
+      { name: "Aqua Sky", val: "linear-gradient(135deg, #00c6ff, #0072ff)" },
+      { name: "Royal Purple", val: "linear-gradient(135deg, #7c3aed, #4f46e5)" },
+      { name: "Rose Pink", val: "linear-gradient(135deg, #e11d48, #db2777)" },
+      { name: "Sunset Orange", val: "linear-gradient(135deg, #ea580c, #d97706)" },
+      { name: "Graphite Dark", val: "#1e293b" }
+    ];
+
+    const dynStyle = document.createElement("style");
+    document.head.appendChild(dynStyle);
+
+    function applyBubbleColor(bgVal) {
+      if (!bgVal) return;
+      localStorage.setItem("chatbox_custom_bubble_bg", bgVal);
+      dynStyle.innerHTML = `
+        #chatArea .msg.out, .chat .msg.out {
+          background: ${bgVal} !important;
+          background-image: ${bgVal.includes("gradient") ? bgVal : "none"} !important;
+          color: #ffffff !important;
+        }
+      `;
+      // स्क्रीन पर पहले से मौजूद सभी बबल्स पर भी तुरंत लागू करना
+      document.querySelectorAll("#chatArea .msg.out, .chat .msg.out").forEach(b => {
+        b.style.setProperty("background", bgVal, "important");
+      });
+    }
+
+    const saved = localStorage.getItem("chatbox_custom_bubble_bg");
+    if (saved) applyBubbleColor(saved);
+    setInterval(() => {
+      const s = localStorage.getItem("chatbox_custom_bubble_bg");
+      if (s) {
+        document.querySelectorAll("#chatArea .msg.out, .chat .msg.out").forEach(b => {
+          if (!b.dataset.colored || b.dataset.colored !== s) {
+            b.dataset.colored = s;
+            b.style.setProperty("background", s, "important");
+          }
+        });
+      }
+    }, 300);
+
+    // केवल असली Wallpaper पॉप-अप को पहचानना (3-Dot मेन्यू को छोड़कर, जिसमें "View contact" होता है)
+    setInterval(() => {
+      const allEls = Array.from(document.querySelectorAll("div, h2, h3, h4, span, p"));
+      const wpTitle = allEls.find(el => {
+        if (el.children.length !== 0 || el.offsetParent === null) return false;
+        const txt = (el.innerText || "").trim();
+        if (txt !== "Chat Wallpaper" && txt !== "Wallpaper") return false;
+        const box = el.closest("div[style]");
+        // यदि इस बॉक्स में "View contact" लिखा है, तो यह 3-Dot मेन्यू है—इसे छोड़ दें
+        if (box && (box.innerText || "").includes("View contact")) return false;
+        return true;
+      });
+
+      if (wpTitle) {
+        let modalCard = wpTitle.parentElement;
+        while (modalCard && modalCard.clientHeight < 200 && modalCard.parentElement) {
+          modalCard = modalCard.parentElement;
+        }
+
+        if (modalCard && !modalCard.querySelector("#cbEmbeddedBubbleColors")) {
+          const cur = localStorage.getItem("chatbox_custom_bubble_bg") || "";
+          const wrap = document.createElement("div");
+          wrap.id = "cbEmbeddedBubbleColors";
+          wrap.style.cssText = "margin-top:16px;padding-top:14px;border-top:1px solid rgba(148,163,184,0.25);";
+          wrap.innerHTML = `
+            <div style="font-size:14px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;">
+              <span>Bubble Color</span>
+              <span style="font-size:11px;opacity:0.7;font-weight:500;">Tap to apply</span>
+            </div>
+            <div id="cbWpColorGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;"></div>
+          `;
+          modalCard.appendChild(wrap);
+
+          const grid = wrap.querySelector("#cbWpColorGrid");
+          colors.forEach(c => {
+            const dot = document.createElement("div");
+            dot.style.cssText = `height:40px;border-radius:12px;background:${c.val};cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;box-shadow:0 2px 8px rgba(0,0,0,0.15);border:2px solid ${cur === c.val ? '#ffffff' : 'transparent'};`;
+            dot.innerHTML = cur === c.val ? "✓" : "";
+            dot.addEventListener("pointerdown", (e) => {
+              e.stopPropagation();
+              grid.querySelectorAll("div").forEach(d => { d.innerHTML = ""; d.style.borderColor = "transparent"; });
+              dot.innerHTML = "✓";
+              dot.style.borderColor = "#ffffff";
+              applyBubbleColor(c.val);
+            }, true);
+            grid.appendChild(dot);
+          });
+        }
+      }
+    }, 300);
+  })();
+</script>
+<script>
+  setInterval(() => {
+    const savedCol = localStorage.getItem("chatbox_custom_bubble_bg") || "#1e293b";
+    document.querySelectorAll("#chatArea .msg, .chat .msg").forEach(b => {
+      if ((b.innerText || "").includes("This message was deleted")) {
+        b.style.setProperty("background", savedCol, "important");
+        b.style.setProperty("opacity", "0.85", "important");
+        b.style.setProperty("font-style", "italic", "important");
+      }
+    });
+  }, 200);
+</script>
+
+
+
+
+</body>
+</html>
+

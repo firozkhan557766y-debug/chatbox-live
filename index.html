@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <script>
+  if (localStorage.getItem("chatbox_username") && localStorage.getItem("chatbox_phone")) {
+    window.location.replace("third.html");
+  }
+</script>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      /* आपके लोगो के रंगों जैसा नीला-हरा ग्रेडिएंट */
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      padding: 40px 25px;
+      text-align: center;
+    }
+
+    .top-space {
+      height: 20px;
+    }
+
+    .center-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .logo-box {
+      width: 110px;
+      height: 110px;
+      background-color: white;
+      border-radius: 28px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 12px 25px rgba(0, 0, 0, 0.18);
+      margin-bottom: 25px;
+      overflow: hidden;
+    }
+
+    /* अगर आप अपना लोगो इमेज लगाना चाहते हैं तो यह स्टाइल काम करेगा */
+    .logo-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .logo-letter {
+      font-size: 60px;
+      font-weight: 900;
+      color: #2979FF;
+    }
+
+    h1 {
+      font-size: 38px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.85);
+      line-height: 1.5;
+      max-width: 300px;
+    }
+
+    .btn-container {
+      width: 100%;
+      max-width: 350px;
+    }
+
+    .start-btn {
+      width: 100%;
+      padding: 16px;
+      background-color: white;
+      color: #2979FF;
+      border: none;
+      border-radius: 15px;
+      font-size: 18px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+      transition: transform 0.2s;
+    }
+
+    .start-btn:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-space"></div>
+
+  <div class="center-content">
+    
+<div style="width:78px; height:78px; margin:0 auto 16px auto; border-radius:24px; background:linear-gradient(145deg, #0f172a, #1e293b); padding:3px; box-shadow:0 12px 30px rgba(41,121,255,0.35), inset 0 1px 1px rgba(255,255,255,0.3); display:flex; align-items:center; justify-content:center;">
+  <svg width="54" height="54" viewBox="0 0 64 64" fill="none">
+    <defs>
+      <linearGradient id="luxGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+        <stop offset="0%" stop-color="#00F5D4"/>
+        <stop offset="50%" stop-color="#2979FF"/>
+        <stop offset="100%" stop-color="#A855F7"/>
+      </linearGradient>
+    </defs>
+    <path d="M44 20C40.5 16.5 35.5 14.5 30 14.5C19.5 14.5 11 22.5 11 32C11 41.5 19.5 49.5 30 49.5C35.5 49.5 40.5 47.5 44 44" stroke="url(#luxGrad)" stroke-width="7.5" stroke-linecap="round"/>
+    <circle cx="46" cy="32" r="4.5" fill="#00F5D4"/>
+  </svg>
+</div>
+
+    <h1>ChatBox</h1>
+    <p>Chat fast and securely without sharing your number.</p>
+  </div>
+  <div class="btn-container">
+    <a href="sec.html" class="start-btn" style="display: block; text-decoration: none;">Get Started</a>
+  </div>
+
+</body>
+</html>
+
+<script>
+    function openNextScreen() {
+      window.location.href = "sec.html";
+    }
+  </script>
+   <script src="no_tap.js"></script>
+   <script src="app_global.js"></script>
+
+
+</body>
+</html>

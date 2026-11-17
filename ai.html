@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Smart AI & Translator</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: #f4f7fb;
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ऊपर का हेडर */
+    .top-bar {
+      background: linear-gradient(135deg, #8E2DE2 0%, #2979FF 100%);
+      color: white;
+      padding: 20px;
+      
+      display: flex;
+      align-items: center;
+      box-shadow: 0 5px 20px rgba(41, 121, 255, 0.2);
+    }
+
+    .back-btn {
+      color: white;
+      text-decoration: none;
+      font-size: 24px;
+      font-weight: bold;
+      margin-right: 15px;
+    }
+
+    .header-title {
+      font-size: 21px;
+      font-weight: bold;
+    }
+
+    .container {
+      padding: 20px 15px;
+      flex: 1;
+    }
+
+    /* ट्रांसलेटर कार्ड */
+    .tool-card {
+      background: white;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #2979FF;
+      margin-bottom: 14px;
+    }
+
+    textarea {
+      width: 100%;
+      background: #f8fafc;
+      border: 1.5px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 12px;
+      font-size: 15px;
+      outline: none;
+      resize: none;
+      margin-bottom: 12px;
+    }
+
+    textarea:focus {
+      border-color: #2979FF;
+      background: white;
+    }
+
+    .controls-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    select {
+      flex: 1;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1.5px solid #e2e8f0;
+      background: #f8fafc;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+      outline: none;
+    }
+
+    .action-btn {
+      background: linear-gradient(135deg, #1DE9B6 0%, #2979FF 100%);
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .result-box {
+      background: #eff6ff;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 15px;
+      color: #1e3a8a;
+      min-height: 55px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .copy-mini {
+      background: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: bold;
+      color: #2979FF;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    /* स्मार्ट क्विक रिप्लाई चिप्स */
+    .chips-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      background: #f1f5f9;
+      border: none;
+      padding: 10px 14px;
+      border-radius: 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+    }
+
+    .chip:active {
+      background: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- हेडर -->
+  <div class="top-bar">
+    <a href="third.html" style="width: 38px; height: 38px; border-radius: 12px; background: rgba(255, 255, 255, 0.22); display: inline-flex; justify-content: center; align-items: center; margin-right: 12px; text-decoration: none;">
+  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 18l-6-6 6-6"/>
+  </svg>
+</a>
+
+    <div class="header-title">✨ Smart AI & Translator</div>
+  </div>
+
+  <div class="container">
+    <!-- 1. लाइव भाषा ट्रांसलेटर -->
+    <div class="tool-card">
+      <div class="card-header">🌐 Instant Message Translator</div>
+      <textarea id="sourceText" rows="3" placeholder="Paste or type any message here..."></textarea>
+
+      <div class="controls-row">
+        <select id="targetLang">
+          <option value="hi">Translate to Hindi (हिंदी)</option>
+          <option value="en">Translate to English</option>
+          <option value="ar">Translate to Arabic (العربية)</option>
+          <option value="ur">Translate to Urdu (اردو)</option>
+        </select>
+        <button class="action-btn" onclick="translateText()">Translate</button>
+      </div>
+
+      <div class="result-box">
+        <span id="translatedResult">Translation will appear here...</span>
+        <button class="copy-mini" onclick="copyResult()">Copy</button>
+      </div>
+    </div>
+
+    <!-- 2. स्मार्ट मैसेज जेनरेटर -->
+    <div class="tool-card">
+      <div class="card-header">⚡ Smart Quick Messages</div>
+      <p style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Tap any topic to generate a ready-to-send message:</p>
+
+      <div class="chips-grid">
+        <button class="chip" onclick="generateTemplate('birthday')">🎂 Birthday Wish</button>
+        <button class="chip" onclick="generateTemplate('busy')">⏳ Busy Right Now</button>
+        <button class="chip" onclick="generateTemplate('thanks')">🙏 Thank You</button>
+        <button class="chip" onclick="generateTemplate('invite')">📲 Invite to ChatBox</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // मुफ्त पब्लिक ट्रांसलेशन API का उपयोग करके असली अनद करना
+                        async function translateText() {
+      const text = document.getElementById("sourceText").value.trim();
+      const targetLang = document.getElementById("targetLang").value;
+      const resultSpan = document.getElementById("translatedResult");
+
+      if (text === "") {
+        alert("Please enter some text first!");
+        return;
+      }
+
+      resultSpan.innerText = "Translating...";
+
+      // यदि यूजर ने हिंदी अक्षर टाइप किए हैं तो स्रोत भाषा हिंदी (hi) मानें, अन्यथा अंग्रेजी (en)
+      const isHindiInput = /[\u0900-\u097F]/.test(text);
+      let sourceLang = isHindiInput ? "hi" : "en";
+
+      // यदि दोनों भाषाएँ एक ही हो जाएँ तो स्रोत भाषा बदलें
+      if (sourceLang === targetLang) {
+        sourceLang = (targetLang === "en") ? "hi" : "en";
+      }
+
+      try {
+        // MyMemory पब्लिक API (यह बिना CORS ब्लॉक के सीधे Chrome और APK में चलती है)
+        const apiUrl = "https://translated.net" + encodeURIComponent(text) + "&langpair=" + sourceLang + "|" + targetLang;
+        
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+
+        if (data && data.responseData && data.responseData.translatedText) {
+          resultSpan.innerText = data.responseData.translatedText;
+        } else {
+          resultSpan.innerText = "Could not translate. Please try again.";
+        }
+      } catch (err) {
+        resultSpan.innerText = "Editor blocked network. Open in Chrome or convert to APK!";
+      }
+    }
+
+
+
+
+
+
+    // स्मार्ट रेडीमेड मैसेज बनाना
+    function generateTemplate(type) {
+      const resultSpan = document.getElementById("translatedResult");
+      const templates = {
+        birthday: "Wishing you a very Happy Birthday! May all your dreams come true this year. 🎉🎂",
+        busy: "Hey! I am a bit busy right now, will message you back on ChatBox shortly. ⏳",
+        thanks: "Thank you so much for your help! Really appreciate it. 🙏✨",
+        invite: "Hey! Join me on ChatBox—we can chat fast and securely without sharing our phone numbers! 🚀"
+      };
+      resultSpan.innerText = templates[type];
+    }
+
+    // अनुवाद किया गया मैसेज कॉपी करना
+    function copyResult() {
+      const text = document.getElementById("translatedResult").innerText;
+      navigator.clipboard.writeText(text);
+      alert("Copied to clipboard! Now paste it in any chat.");
+    }
+  </script>
+   <script src="theme.js"></script>
+    <script src="no_tap.js"></script>
+    <script src="app_global.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Broadcast Lists - ChatBox</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+    body { background: #f8fafc; color: #0f172a; padding-bottom: 90px; }
+    .top-bar { height: 60px; padding: 0 16px; background: #008069; color: #ffffff; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 10px rgba(0,0,0,0.08); }
+    .back-btn { background: none; border: none; color: #ffffff; display: flex; align-items: center; cursor: pointer; }
+    .info-banner { background: #f0fdf4; color: #008069; padding: 12px 16px; font-size: 12.5px; line-height: 1.4; border-bottom: 1px solid #dcfce7; }
+    .friend-list { padding: 12px 16px; }
+    .f-card { background: #ffffff; border-radius: 16px; padding: 12px 14px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.03); cursor: pointer; border: 1.5px solid transparent; transition: 0.15s; }
+    .f-card.selected { border-color: #008069; background: #f0fdf4; }
+    .av { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #00F5D4, #2979FF); color: #ffffff; font-weight: 700; font-size: 17px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .chk-box { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; color: #ffffff; font-size: 13px; font-weight: 800; }
+    .f-card.selected .chk-box { background: #008069; border-color: #008069; }
+    .bot-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #ffffff; padding: 10px 14px; display: flex; align-items: center; gap: 10px; box-shadow: 0 -4px 16px rgba(0,0,0,0.06); z-index: 60; }
+    .msg-inp { flex: 1; background: #f1f5f9; border: none; outline: none; padding: 12px 16px; border-radius: 24px; font-size: 14.5px; color: #0f172a; }
+    .send-btn { width: 46px; height: 46px; border-radius: 50%; border: none; background: #008069; color: #ffffff; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar" id="topHdr">
+    <button class="back-btn" onclick="history.back()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    </button>
+    <div>
+      <div style="font-size:17px;font-weight:700;">New Broadcast</div>
+      <div id="selCount" style="font-size:12px;opacity:0.85;">0 friends selected</div>
+    </div>
+  </div>
+
+  <div class="info-banner">
+    Only accepted friends who have saved your ChatBox ID will receive your broadcast message privately.
+  </div>
+
+  <div class="friend-list" id="friendsBox"></div>
+
+  <div class="bot-bar">
+    <input type="text" class="msg-inp" id="bcInput" placeholder="Type broadcast message...">
+    <button class="send-btn" id="bcSendBtn" onclick="sendBroadcastNow()">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+    </button>
+  </div>
+
+  <script>
+    const themeGrad = localStorage.getItem("chatbox_theme_grad");
+    const themePrim = localStorage.getItem("chatbox_theme_primary");
+    if (themeGrad) document.getElementById("topHdr").style.background = themeGrad;
+    if (themePrim) document.getElementById("bcSendBtn").style.background = themePrim;
+
+    const myUser = "@" + (localStorage.getItem("chatbox_username") || "me").replace("@", "");
+    const rawFriends = JSON.parse(localStorage.getItem("chatbox_friends") || "[]");
+    const selectedSet = new Set();
+
+    function renderFriends() {
+      const box = document.getElementById("friendsBox");
+      if (rawFriends.length === 0) {
+        box.innerHTML = `<div style="text-align:center;padding:50px 20px;color:#94a3b8;font-size:14px;">No accepted friends found.<br>Accept friend requests first to create a broadcast list.</div>`;
+        return;
+      }
+
+      box.innerHTML = rawFriends.map(f => {
+        const u = "@" + (f.user || f.username || f).replace("@", "");
+        const n = f.name || u;
+        const isSel = selectedSet.has(u);
+        return `
+          <div class="f-card ${isSel ? "selected" : ""}" onclick="toggleSelect('${u}')">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="av">${n.charAt(0).toUpperCase()}</div>
+              <div>
+                <div style="font-weight:700;font-size:15px;">${n}</div>
+                <div style="font-size:12.5px;color:#64748b;">${u}</div>
+              </div>
+            </div>
+            <div class="chk-box">${isSel ? "✓" : ""}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function toggleSelect(user) {
+      if (selectedSet.has(user)) selectedSet.delete(user);
+      else selectedSet.add(user);
+      document.getElementById("selCount").innerText = `${selectedSet.size} friend(s) selected`;
+      renderFriends();
+    }
+
+    function sendBroadcastNow() {
+      const text = document.getElementById("bcInput").value.trim();
+      if (selectedSet.size === 0) {
+        if (window.showAppAlert) showAppAlert("Please select at least 1 friend first!");
+        return;
+      }
+      if (!text) return;
+
+      const timeStr = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      selectedSet.forEach(targetUser => {
+        const key = "chat_msgs_" + targetUser;
+        const history = JSON.parse(localStorage.getItem(key) || "[]");
+        const mid = "bc_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+        history.push({ mid: mid, sender: "me", text: text, time: timeStr, status: "sent" });
+        localStorage.setItem(key, JSON.stringify(history));
+        let recentChats = JSON.parse(localStorage.getItem("chatbox_recent_chats") || "[]");
+        const existing = recentChats.find(c => c.user === targetUser);
+        if (existing) {
+          existing.lastMsg = "📢 " + text;
+          existing.time = timeStr;
+        }
+        localStorage.setItem("chatbox_recent_chats", JSON.stringify(recentChats));
+
+        if (window.socket) {
+          window.socket.emit("private_message", { mid: mid, from: myUser, to: targetUser, content: text, type: "text" });
+        }
+      });
+
+      document.getElementById("bcInput").value = "";
+      if (window.showAppAlert) {
+        showAppAlert(`Broadcast sent to ${selectedSet.size} friend(s)!`);
+      }
+    }
+
+    renderFriends();
+  </script>
+  <script src="live.js"></script>
+  <script src="popup.js"></script>
+  <script src="theme.js"></script>
+  <script src="app_global.js"></script>
+
+</body>
+</html>

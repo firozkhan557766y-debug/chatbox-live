@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatBox - Contact Info</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    body { background: #0b141a; color: #e9edef; min-height: 100vh; padding-bottom: 40px; }
+    
+    /* ऊपर का नेविगेशन बार */
+    .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; background: #111b21; position: sticky; top: 0; z-index: 100; border-bottom: 1px solid #202c33; }
+    .top-left { display: flex; align-items: center; gap: 12px; }
+    .back-btn { color: #e9edef; text-decoration: none; display: flex; align-items: center; justify-content: center; padding: 4px; }
+    .mini-ava { width: 38px; height: 38px; border-radius: 50%; background: #202c33; color: #00a884; font-weight: 800; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+
+    /* मुख्य प्रोफ़ाइल कार्ड */
+    .hero-card { background: #111b21; text-align: center; padding: 26px 16px; margin-bottom: 10px; }
+    .big-dp { width: 96px; height: 96px; border-radius: 50%; background: linear-gradient(135deg, #00a884, #2979FF); color: white; font-size: 40px; font-weight: 800; display: flex; align-items: center; justify-content: center; margin: 0 auto 14px auto; box-shadow: 0 8px 25px rgba(0, 168, 132, 0.25); }
+
+    /* सेटिंग्स सेक्शन कार्ड्स */
+    .sec-card { background: #111b21; margin-bottom: 10px; padding: 4px 0; }
+    .row-item { display: flex; align-items: center; justify-content: space-between; padding: 15px 18px; cursor: pointer; transition: 0.15s; }
+    .row-item:active { background: #182229; }
+    .row-left { display: flex; align-items: center; gap: 16px; }
+    .ico-box { width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; color: #8696a0; flex-shrink: 0; }
+    .r-title { font-size: 16px; color: #e9edef; font-weight: 500; }
+    .r-sub { font-size: 13px; color: #8696a0; margin-top: 2px; line-height: 1.35; }
+
+    /* प्रीमियम टॉगल स्विच */
+    .switch { position: relative; width: 46px; height: 26px; background: #2a3942; border-radius: 20px; transition: 0.3s; flex-shrink: 0; }
+    .switch.on { background: #00a884; }
+    .knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #8696a0; transition: 0.3s; }
+    .switch.on .knob { left: 23px; background: #111b21; }
+
+    /* ग्रुप आइकन सर्कल */
+    .grp-circle { width: 42px; height: 42px; border-radius: 50%; background: #00a884; color: #111b21; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* लाल रंग वाले खतरनाक विकल्प */
+    .danger .ico-box, .danger .r-title { color: #f15c6d; }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="top-left">
+      <a href="for.html" class="back-btn">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      </a>
+      <div class="mini-ava" id="miniDp">U</div>
+      <h3 id="topName" style="font-size:18px; font-weight:600;">User</h3>
+    </div>
+    <div onclick="alert('Private Contact ID: ' + partnerUser)" style="color:#8696a0; padding:4px; cursor:pointer;">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+    </div>
+  </div>
+
+  <div class="hero-card">
+    <div class="big-dp" id="bigDp">U</div>
+    <h2 id="heroName" style="font-size:22px; font-weight:700;">User</h2>
+    <p id="heroUser" style="color:#00a884; font-size:14px; font-weight:600; margin-top:4px;">@username</p>
+    <p style="color:#8696a0; font-size:12px; margin-top:5px;">Private ID • Mobile Number Hidden</p>
+  </div>
+
+  <!-- 1. प्राइवेसी और चैट सेटिंग्स -->
+  <div class="sec-card">
+    <div class="row-item" onclick="toggleMedia()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+        </div>
+        <div>
+          <div class="r-title">Media visibility</div>
+          <div class="r-sub" id="mediaSub">Default (Yes)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row-item" onclick="alert('End-to-End Encrypted\nMessages and calls in this chat are secured with private keys.')">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div>
+          <div class="r-title">Encryption</div>
+          <div class="r-sub">Messages and calls are end-to-end encrypted. Tap to verify.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row-item" onclick="cycleDisappearing()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 15"/></svg>
+        </div>
+        <div>
+          <div class="r-title">Disappearing messages</div>
+          <div class="r-sub" id="disSub">Off</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row-item" onclick="toggleChatLock()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><rect x="9" y="10" width="6" height="5" rx="1"/><path d="M10 10V8a2 2 0 1 1 4 0v2"/></svg>
+        </div>
+        <div>
+          <div class="r-title">Chat lock</div>
+          <div class="r-sub">Lock and hide this chat on this device.</div>
+        </div>
+      </div>
+      <div class="switch" id="lockSwitch"><div class="knob"></div></div>
+    </div>
+
+    <div class="row-item" onclick="toggleRestricted()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </div>
+        <div>
+          <div class="r-title">Restricted chat</div>
+          <div class="r-sub" id="resSub">Off</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. ग्रुप विकल्प -->
+  <div class="sec-card">
+    <div style="padding:10px 18px 4px 18px; font-size:13px; color:#8696a0;">No groups in common</div>
+    <div class="row-item" onclick="createNewGroup()">
+      <div class="row-left">
+        <div class="grp-circle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111b21" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="r-title" id="grpCreateTxt">Create group with User</div>
+      </div>
+    </div>
+    <div class="row-item" onclick="alert('Select an existing group to add ' + partnerName)">
+      <div class="row-left">
+        <div class="grp-circle">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#111b21" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        </div>
+        <div class="r-title">Add to groups</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. फेवरेट और लिस्ट -->
+  <div class="sec-card">
+    <div class="row-item" onclick="toggleFav()">
+      <div class="row-left">
+        <div class="ico-box" id="favIco">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        </div>
+        <div class="r-title" id="favTxt">Add to Favorites</div>
+      </div>
+    </div>
+    <div class="row-item" onclick="alert('Added to Custom Friends List!')">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="17" y2="13"/><line x1="7" y1="17" x2="13" y2="17"/></svg>
+        </div>
+        <div class="r-title">Add to list</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. चैट साफ करना, ब्लॉक और रिपोर्ट -->
+  <div class="sec-card">
+    <div class="row-item danger" onclick="clearThisChat()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        </div>
+        <div class="r-title">Clear chat</div>
+      </div>
+    </div>
+    <div class="row-item danger" onclick="toggleBlock()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        </div>
+        <div class="r-title" id="blockTxt">Block User</div>
+      </div>
+    </div>
+    <div class="row-item danger" onclick="reportUser()">
+      <div class="row-left">
+        <div class="ico-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>
+        </div>
+        <div class="r-title" id="reportTxt">Report User</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const partnerName = localStorage.getItem("active_chat_name") || "Friend";
+    const partnerUser = localStorage.getItem("active_chat_user") || "@friend";
+    const storageKey = "cb_chat_prefs_" + partnerUser;
+
+    let prefs = JSON.parse(localStorage.getItem(storageKey) || "{}");
+
+    function initInfo() {
+      document.getElementById("topName").innerText = partnerName;
+      document.getElementById("heroName").innerText = partnerName;
+      document.getElementById("heroUser").innerText = partnerUser;
+      document.getElementById("grpCreateTxt").innerText = "Create group with " + partnerName;
+      document.getElementById("blockTxt").innerText = prefs.blocked ? ("Unblock " + partnerName) : ("Block " + partnerName);
+      document.getElementById("reportTxt").innerText = "Report " + partnerName;
+
+      const initial = partnerName.charAt(0).toUpperCase();
+      document.getElementById("miniDp").innerText = initial;
+      document.getElementById("bigDp").innerText = initial;
+
+      document.getElementById("mediaSub").innerText = prefs.mediaOff ? "Off (Hidden from gallery)" : "Default (Yes)";
+      document.getElementById("disSub").innerText = prefs.disappearing || "Off";
+      document.getElementById("resSub").innerText = prefs.restricted ? "On (Notifications muted)" : "Off";
+
+      if (prefs.locked) document.getElementById("lockSwitch").classList.add("on");
+      else document.getElementById("lockSwitch").classList.remove("on");
+
+      const favBox = document.getElementById("favIco");
+      if (prefs.fav) {
+        favBox.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="#f15c6d" stroke="#f15c6d" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+        document.getElementById("favTxt").innerText = "Remove from Favorites";
+      } else {
+        favBox.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`;
+        document.getElementById("favTxt").innerText = "Add to Favorites";
+      }
+    }
+
+    function savePrefs() {
+      localStorage.setItem(storageKey, JSON.stringify(prefs));
+      initInfo();
+    }
+
+    function toggleMedia() { prefs.mediaOff = !prefs.mediaOff; savePrefs(); }
+
+    function cycleDisappearing() {
+      const modes = ["Off", "24 hours", "7 days", "90 days"];
+      let next = (modes.indexOf(prefs.disappearing || "Off") + 1) % modes.length;
+      prefs.disappearing = modes[next];
+      savePrefs();
+    }
+
+    function toggleChatLock() {
+      if (!prefs.locked) {
+        const pin = prompt("Set a 4-digit PIN to lock this chat:");
+        if (!pin || pin.length < 4) { alert("Please enter at least 4 digits!"); return; }
+        prefs.locked = true;
+        prefs.pin = pin;
+        alert("Chat Locked! PIN required to open this chat.");
+      } else {
+        prefs.locked = false;
+        delete prefs.pin;
+        alert("Chat Lock turned Off.");
+      }
+      savePrefs();
+    }
+
+    function toggleRestricted() { prefs.restricted = !prefs.restricted; savePrefs(); }
+    function toggleFav() { prefs.fav = !prefs.fav; savePrefs(); }
+
+    function createNewGroup() {
+      const gName = prompt("Enter new Group Name with " + partnerName + ":");
+      if (!gName) return;
+      const grpId = "@group_" + Date.now();
+      const myUser = "@" + (localStorage.getItem("chatbox_username") || "me");
+
+      let chats = JSON.parse(localStorage.getItem("chatbox_chats") || "[]");
+      chats.unshift({ name: gName, username: grpId, lastMsg: "Group created", time: "Just now" });
+      localStorage.setItem("chatbox_chats", JSON.stringify(chats));
+
+      if (window.socket) {
+        window.socket.emit("create_real_group", { groupId: grpId, groupName: gName, member: partnerUser, admin: myUser });
+      }
+      alert("Group '" + gName + "' created & synced!");
+    }
+
+    function clearThisChat() {
+      if (confirm("Clear all messages with " + partnerName + "?")) {
+        localStorage.removeItem("chat_history_" + partnerUser);
+        alert("Chat cleared!");
+      }
+    }
+
+    function toggleBlock() {
+      prefs.blocked = !prefs.blocked;
+      savePrefs();
+      const myUser = localStorage.getItem("chatbox_username") || "me";
+      if (window.socket) {
+        window.socket.emit("toggle_block_user", { me: myUser, target: partnerUser, block: prefs.blocked });
+      }
+      alert(prefs.blocked ? (partnerName + " is now blocked on server!") : ("Unblocked " + partnerName));
+    }
+
+    function reportUser() {
+      if (confirm("Report " + partnerName + " (" + partnerUser + ")?")) {
+        const myUser = localStorage.getItem("chatbox_username") || "me";
+        if (window.socket) {
+          window.socket.emit("report_user", { by: myUser, against: partnerUser });
+        }
+        alert("Report recorded on server!");
+      }
+    }
+
+    initInfo();
+  </script>
+  <script src="live.js"></script>
+  <script src="theme.js"></script>
+  <script src="no_tap.js"></script>
+  <script src="app_global.js"></script>
+
+</body>
+</html>
