@@ -1,8 +1,7 @@
 FROM node:18-alpine
 WORKDIR /app
-RUN npm install -g express socket.io cors
-ENV NODE_PATH=/usr/local/lib/node_modules
 COPY . .
+RUN rm -rf node_modules package-lock.json && npm install express socket.io cors
 CMD ["node", "server.js"]
 
 
