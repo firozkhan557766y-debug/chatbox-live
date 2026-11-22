@@ -1,4 +1,4 @@
-(function () {
+function () {
   function initWhatsAppChatBar() {
     const hdr = document.querySelector("header, .header, .top-bar, .chat-header");
     if (hdr) {
@@ -83,6 +83,12 @@
   document.querySelectorAll("footer, .chat-input, .input-area, .message-input-wrap").forEach(el => {
   if (!el.closest("#waSlimInputWrap")) el.style.display = "none";
 });
+  setInterval(() => {
+  document.querySelectorAll('input[placeholder*="Type a message"]').forEach(el => {
+    const box = el.closest("div[style], footer, .input-box, .chat-footer, div") || el.parentElement;
+    if (box && !box.closest("#waSlimInputWrap")) box.style.setProperty("display", "none", "important");
+  });
+}, 300);
   
 })();
 
