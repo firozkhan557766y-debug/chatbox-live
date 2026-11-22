@@ -137,4 +137,16 @@
   setInterval(() => {
     document.querySelectorAll(".chat-item").forEach(applyMeta);
   }, 350);
+  // पिन (📎) बटन पर असली WhatsApp अटैचमेंट मेन्यू जोड़ना
+const pinIcon = document.querySelector(".input-area button, .chat-input button, footer button, .attach-btn");
+if (pinIcon && !pinIcon.dataset.waMenuReady) {
+  pinIcon.dataset.waMenuReady = "1";
+  pinIcon.addEventListener("click", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const box = document.getElementById("waAttachBox");
+    if (box) box.style.display = box.style.display === "grid" ? "none" : "grid";
+  }, true);
+}
+  
 })();
