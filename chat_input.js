@@ -80,5 +80,9 @@
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", initWhatsAppChatBar);
   else initWhatsAppChatBar();
+  document.querySelectorAll("footer, .chat-input, .input-area, .message-input-wrap").forEach(el => {
+  if (!el.closest("#waSlimInputWrap")) el.style.display = "none";
+});
+  
 })();
 
