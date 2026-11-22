@@ -156,5 +156,41 @@
 
   document.addEventListener("DOMContentLoaded", buildCleanWhatsAppChat);
   window.addEventListener("load", buildCleanWhatsAppChat);
+  // 1. पुराने 'Type a message...' वाले बार को जड़ से छिपाना
+document.querySelectorAll('input, textarea').forEach(el => {
+  if (el.id !== "waNewMsgBox" && (el.placeholder || "").toLowerCase().includes("type a message")) {
+    let p = el.parentElement;
+    while (p && p.parentElement && p.parentElement.tagName !== "BODY" && !p.parentElement.classList.contains("chat")) {
+      p = p.parentElement;
+    }
+    if (p && p.id !== "waNewInputWrap") p.style.setProperty("display", "none", "important");
+  }
+});
+
+// 2. कीबोर्ड के ऊपर आने वाली Google Autofill (चाबी/लोकेशन) पट्टी को रोकना
+const newBox = document.getElementById("waNewMsgBox");
+if (newBox) {
+  newBox.setAttribute("name", "chat_msg_random_" + Date.now());
+  newBox.setAttribute("autocomplete", "off");
+  newBox.setAttribute("autocorrect", "off");
+}
+
+// 3. कीबोर्ड खुलने पर भी ऊपर वाले हेडर को स्क्रीन के ठीक ऊपर चिपकाए रखना
+function keepHeaderPinned() {
+  const topHdr = document.querySelector("header, .header, .top-bar, .chat-header");
+  if (topHdr) {
+    const vy = window.visualViewport ? window.visualViewport.offsetTop : 0;
+    topHdr.style.setProperty("position", "fixed", "important");
+    topHdr.style.setProperty("top", vy + "px", "important");
+    topHdr.style.setProperty("z-index", "99999", "important");
+  }
+}
+keepHeaderPinned();
+if (window.visualViewport) {
+  window.visualViewport.addEventListener("resize", keepHeaderPinned);
+  window.visualViewport.addEventListener("scroll", keepHeaderPinned);
+}
+window.addEventListener("scroll", keepHeaderPinned);
+  
   setInterval(buildCleanWhatsAppChat, 400);
 })();
