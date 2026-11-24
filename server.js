@@ -270,7 +270,42 @@ io.on("connection", (socket) => {
     const ownerSocket = onlineUsers[d.ownerUser];
     if (ownerSocket) io.to(ownerSocket).emit("story_viewed_receipt", d);
   });
+  // === LIVE USER REGISTER, SEARCH & JOIN NOTIFICATION ===
+  global.liveUsers = global.liveUsers || {};
 
+  socket.on("register_live_user", (user) => {
+    if (!user || !user.username) return;
+    const uname = user.username.toLowerCase().replace("@", "").trim();
+    const isNew = !global.liveUsers[uname];
+    global.liveUsers[uname] = {
+      name: user.name || uname,
+      username: uname,
+      phone: user.phone || "",
+      socketId: socket.id,
+      online: true
+    };
+    socket.username = uname;
+
+    // सभी यूज़र्स को ताज़ा यूज़र लिस्ट भेजना
+    io.emit("all_live_users", Object.values(global.liveUsers));
+
+    // नया दोस्त जुड़ते ही सबको "Joined ChatBox" नोटिफिकेशन भेजना
+    if (isNew) {
+      socket.broadcast.emit("user_joined_chatbox", {
+        name: user.name || uname,
+        username: uname
+      });
+    }
+  });
+
+  socket.on("search_live_users", (q) => {
+    const query = (q || "").toLowerCase().replace("@", "").trim();
+    const matches = Object.values(global.liveUsers || {}).filter(
+      (u) => u.username.includes(query) || (u.name || "").toLowerCase().includes(query)
+    );
+    socket.emit("search_live_results", matches);
+  });
+  
   socket.on("disconnect", () => {
     if (socket.username) delete onlineUsers[socket.username];
   });
