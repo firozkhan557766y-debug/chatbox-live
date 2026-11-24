@@ -173,25 +173,13 @@ io.on("connection", (socket) => {
     }
   });
 
-      // 1. असली मैसेज भेजने पर Offline/Online के हिसाब से Single (✓) या Double (✓✓) टिक देना
-  socket.on("private_message", (data) => {
-    const targetSocket = onlineUsers[data.to];
-    if (targetSocket) {
-      // यूजर ऑनलाइन है -> मैसेज भेजना और भेजने वाले को Double Tick (delivered) देना
-      io.to(targetSocket).emit("new_message", {
-        mid: data.mid,
-        from: data.from,
-        content: data.content,
-        type: data.type || "text"
-      });
-      socket.emit("msg_status_update", { to: data.to, mid: data.mid, status: "delivered" });
-    } else {
-      // यूजर ऑफलाइन है -> मैसेज स्टोर करना और भेजने वाले को Single Tick (sent) देना
-      if (!offlineMessages[data.to]) offlineMessages[data.to] = [];
-      offlineMessages[data.to].push(data);
-      socket.emit("msg_status_update", { to: data.to, mid: data.mid, status: "sent" });
-    }
-  });
+
+
+
+
+
+
+  
     socket.on("webrtc_offer", d => {
     const s = onlineUsers[d.to];
     if (s) {
@@ -319,6 +307,41 @@ io.on("connection", (socket) => {
     );
     socket.emit("search_live_results", matches);
   });
+    global.offlineMessages = global.offlineMessages || {};
+
+  socket.on("private_message", (data) => {
+    if (!data || !data.to) return;
+    const toUser = data.to.toLowerCase().replace("@", "").trim();
+    const fromUser = (data.from || socket.username || "user").toLowerCase().replace("@", "").trim();
+    const payload = {
+      id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+      from: fromUser,
+      fromName: data.fromName || fromUser,
+      to: toUser,
+      text: data.text || "",
+      media: data.media || null,
+      time: data.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    };
+
+    // सर्वर पर भी सेव करना ताकि बैकग्राउंड टैब खुलते ही तुरंत मिले
+    global.offlineMessages[toUser] = global.offlineMessages[toUser] || [];
+    global.offlineMessages[toUser].push(payload);
+
+    const target = global.liveUsers && global.liveUsers[toUser];
+    if (target && target.socketId) {
+      io.to(target.socketId).emit("receive_private_message", payload);
+    }
+  });
+
+  socket.on("sync_my_messages", (username) => {
+    const u = (username || "").toLowerCase().replace("@", "").trim();
+    const list = (global.offlineMessages && global.offlineMessages[u]) || [];
+    if (list.length > 0) {
+      socket.emit("bulk_receive_messages", list);
+      global.offlineMessages[u] = [];
+    }
+  });
+  
       // === PERSISTENT FOLLOW REQUEST -> ACCEPT -> DIRECT CHAT ===
   global.pendingRequests = global.pendingRequests || {};
 
