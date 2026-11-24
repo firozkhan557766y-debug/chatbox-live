@@ -319,6 +319,39 @@ io.on("connection", (socket) => {
     );
     socket.emit("search_live_results", matches);
   });
+    // === FOLLOW REQUEST -> ACCEPT -> DIRECT CHAT FLOW ===
+  socket.on("send_follow_request", ({ from, fromName, to }) => {
+    if (!from || !to) return;
+    const a = from.toLowerCase().replace("@", "").trim();
+    const b = to.toLowerCase().replace("@", "").trim();
+    const target = global.liveUsers && global.liveUsers[b];
+    if (target && target.socketId) {
+      io.to(target.socketId).emit("incoming_follow_request", {
+        from: a,
+        fromName: fromName || a
+      });
+    }
+  });
+
+  socket.on("accept_follow_request", ({ from, fromName, to }) => {
+    if (!from || !to) return;
+    const acceptor = from.toLowerCase().replace("@", "").trim();
+    const requester = to.toLowerCase().replace("@", "").trim();
+
+    global.userFollows = global.userFollows || {};
+    global.userFollows[acceptor] = global.userFollows[acceptor] || [];
+    global.userFollows[requester] = global.userFollows[requester] || [];
+    if (!global.userFollows[acceptor].includes(requester)) global.userFollows[acceptor].push(requester);
+    if (!global.userFollows[requester].includes(acceptor)) global.userFollows[requester].push(acceptor);
+
+    const reqTarget = global.liveUsers && global.liveUsers[requester];
+    if (reqTarget && reqTarget.socketId) {
+      io.to(reqTarget.socketId).emit("follow_request_accepted", {
+        by: acceptor,
+        byName: fromName || acceptor
+      });
+    }
+  });
   
   socket.on("disconnect", () => {
     if (socket.username) delete onlineUsers[socket.username];
