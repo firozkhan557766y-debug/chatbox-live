@@ -319,17 +319,28 @@ io.on("connection", (socket) => {
     );
     socket.emit("search_live_results", matches);
   });
-    // === FOLLOW REQUEST -> ACCEPT -> DIRECT CHAT FLOW ===
+      // === PERSISTENT FOLLOW REQUEST -> ACCEPT -> DIRECT CHAT ===
+  global.pendingRequests = global.pendingRequests || {};
+
   socket.on("send_follow_request", ({ from, fromName, to }) => {
     if (!from || !to) return;
     const a = from.toLowerCase().replace("@", "").trim();
     const b = to.toLowerCase().replace("@", "").trim();
+    global.pendingRequests[b] = global.pendingRequests[b] || [];
+    if (!global.pendingRequests[b].some((r) => r.from === a)) {
+      global.pendingRequests[b].push({ from: a, fromName: fromName || a });
+    }
     const target = global.liveUsers && global.liveUsers[b];
     if (target && target.socketId) {
-      io.to(target.socketId).emit("incoming_follow_request", {
-        from: a,
-        fromName: fromName || a
-      });
+      io.to(target.socketId).emit("incoming_follow_request", { from: a, fromName: fromName || a });
+    }
+  });
+
+  socket.on("check_pending_requests", (username) => {
+    const u = (username || "").toLowerCase().replace("@", "").trim();
+    const list = (global.pendingRequests && global.pendingRequests[u]) || [];
+    if (list.length > 0) {
+      socket.emit("incoming_follow_request", list[list.length - 1]);
     }
   });
 
@@ -337,19 +348,12 @@ io.on("connection", (socket) => {
     if (!from || !to) return;
     const acceptor = from.toLowerCase().replace("@", "").trim();
     const requester = to.toLowerCase().replace("@", "").trim();
-
-    global.userFollows = global.userFollows || {};
-    global.userFollows[acceptor] = global.userFollows[acceptor] || [];
-    global.userFollows[requester] = global.userFollows[requester] || [];
-    if (!global.userFollows[acceptor].includes(requester)) global.userFollows[acceptor].push(requester);
-    if (!global.userFollows[requester].includes(acceptor)) global.userFollows[requester].push(acceptor);
-
+    if (global.pendingRequests && global.pendingRequests[acceptor]) {
+      global.pendingRequests[acceptor] = global.pendingRequests[acceptor].filter((r) => r.from !== requester);
+    }
     const reqTarget = global.liveUsers && global.liveUsers[requester];
     if (reqTarget && reqTarget.socketId) {
-      io.to(reqTarget.socketId).emit("follow_request_accepted", {
-        by: acceptor,
-        byName: fromName || acceptor
-      });
+      io.to(reqTarget.socketId).emit("follow_request_accepted", { by: acceptor, byName: fromName || acceptor });
     }
   });
   
