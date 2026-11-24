@@ -77,7 +77,16 @@
       if (!txt) return;
       const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
       appendOutBubble(`${txt} <span style="font-size:10.5px;opacity:0.8;margin-left:6px;">${t} ✓</span>`);
-      if (window.socket) window.socket.emit("private_message", { to: localStorage.getItem("active_chat_user"), text: txt, time: t });
+            const peer = (localStorage.getItem("active_chat_user") || "default").toLowerCase().replace("@", "").trim();
+      const arr = JSON.parse(localStorage.getItem("cb_direct_msgs_" + peer) || "[]");
+      arr.push({ side: "out", text: txt, time: t });
+      localStorage.setItem("cb_direct_msgs_" + peer, JSON.stringify(arr));
+      if (window.renderSteadyMessages) window.renderSteadyMessages();
+      
+            const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+      const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+      if (window.socket) window.socket.emit("private_message", { from: myUser, fromName: myName, to: peer, text: txt, time: t });
+      
       box.value = "";
     }
     btn.onclick = sendMsg;
