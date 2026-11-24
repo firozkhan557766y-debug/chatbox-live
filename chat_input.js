@@ -136,35 +136,3 @@
   }
 })();
 // === UNBREAKABLE HTML-ROOT MESSAGE LAYER ===
-(function () {
-  function syncRootChat() {
-    if (!window.location.pathname.includes("for.html")) return;
-    let layer = document.getElementById("unbreakableChatLayer");
-    if (!layer) {
-      layer = document.createElement("div");
-      layer.id = "unbreakableChatLayer";
-      layer.style.cssText = "position:fixed;top:62px;bottom:68px;left:0;right:0;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:6px;z-index:9990;pointer-events:auto;";
-      document.documentElement.appendChild(layer);
-    }
-
-    const peer = (localStorage.getItem("active_chat_user") || "default").toLowerCase().replace("@", "").trim();
-    const list = JSON.parse(localStorage.getItem("cb_direct_msgs_" + peer) || "[]");
-
-    if (layer.dataset.len === String(list.length)) return;
-    layer.dataset.len = String(list.length);
-
-    layer.innerHTML = "";
-    list.forEach((m) => {
-      const b = document.createElement("div");
-      const out = m.side === "out";
-      b.style.cssText = out
-        ? "align-self:flex-end;background:#008069;color:#fff;padding:8px 12px;border-radius:14px 14px 4px 14px;max-width:78%;font-size:14.5px;box-shadow:0 2px 6px rgba(0,0,0,0.2);word-break:break-word;"
-        : "align-self:flex-start;background:#1e293b;color:#fff;padding:8px 12px;border-radius:14px 14px 14px 4px;max-width:78%;font-size:14.5px;box-shadow:0 2px 6px rgba(0,0,0,0.2);word-break:break-word;";
-      b.innerHTML = `${m.text} <span style="font-size:10px;opacity:0.75;margin-left:6px;">${m.time}${out ? " ✓✓" : ""}</span>`;
-      layer.appendChild(b);
-    });
-    layer.scrollTop = layer.scrollHeight;
-  }
-
-  setInterval(syncRootChat, 200);
-})();
