@@ -307,3 +307,71 @@
   setInterval(keepSyncing, 1500);
   document.addEventListener("visibilitychange", () => { if (!document.hidden) keepSyncing(); });
 })();
+// === ANTI-WIPE LOCK: KEEP LIVE BUBBLES & HOME CARDS PERMANENTLY VISIBLE ===
+(function () {
+  function restorePersistentUI() {
+    const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (!myUser) return;
+
+    // 1. होम स्क्रीन के लाइव कार्ड्स को कभी मिटने न देना
+    const listBox = document.querySelector("#chatList, .chat-list, .chats");
+    if (listBox && !window.location.pathname.includes("for.html")) {
+      const savedCards = JSON.parse(localStorage.getItem("cb_home_cards_" + myUser) || "{}");
+      Object.values(savedCards).forEach((c) => {
+        if (!c || !c.username) return;
+        const cid = "live_card_" + c.username;
+        if (!document.getElementById(cid)) {
+          const card = document.createElement("div");
+          card.id = cid;
+          card.className = "chat-item chat-card";
+          card.style.cssText = "display:flex;align-items:center;justify-content:space-between;background:#111418;padding:14px;border-radius:10px;margin-bottom:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);";
+          card.onclick = () => {
+            localStorage.setItem("active_chat_user", "@" + c.username);
+            localStorage.setItem("active_chat_name", c.name);
+            location.href = "for.html";
+          };
+          card.innerHTML = `
+            <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+              <div style="width:46px;height:46px;border-radius:50%;background:#0095f6;color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${(c.name || "U").charAt(0).toUpperCase()}</div>
+              <div style="min-width:0;flex:1;">
+                <div style="font-weight:700;font-size:15px;color:#fff;">${c.name}</div>
+                <div style="font-size:13px;color:#25d366;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.lastText || "Tap to start chatting"}</div>
+              </div>
+            </div>
+            <span style="font-size:11px;color:#94a3b8;">${c.timeStr || ""}</span>`;
+          listBox.prepend(card);
+        }
+      });
+    }
+
+    // 2. चैट स्क्रीन (for.html) के सभी भेजे और आए हुए लाइव बबल्स को कभी गायब न होने देना
+    if (window.location.pathname.includes("for.html")) {
+      const area = document.querySelector("#chatArea, .chat-area, .chat");
+      const activeChat = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+      if (area && activeChat) {
+        const histKey = "cb_chat_hist_" + myUser + "_" + activeChat;
+        const hist = JSON.parse(localStorage.getItem(histKey) || "[]");
+        hist.forEach((m, idx) => {
+          const mid = "cb_perm_msg_" + idx;
+          if (!document.getElementById(mid)) {
+            const b = document.createElement("div");
+            b.id = mid;
+            const isOut = m.side === "out";
+            b.className = isOut ? "msg out" : "msg in";
+            b.style.cssText = isOut
+              ? "align-self:flex-end;background:#008069;color:#fff;padding:7px 11px;border-radius:14px 14px 4px 14px;max-width:78%;margin:4px 0;font-size:14.5px;box-shadow:0 1px 2px rgba(0,0,0,0.14);"
+              : "align-self:flex-start;background:var(--card-bg,#ffffff);color:var(--text-main,#111827);padding:7px 11px;border-radius:14px 14px 14px 4px;max-width:78%;margin:4px 0;font-size:14.5px;box-shadow:0 1px 2px rgba(0,0,0,0.14);";
+            b.innerHTML = m.media
+              ? `<img src="${m.media}" style="max-width:200px;border-radius:10px;display:block;"><div style="font-size:10px;opacity:0.75;margin-top:3px;">${m.time}</div>`
+              : `${m.text} <span style="font-size:10px;opacity:0.75;margin-left:6px;">${m.time}${isOut ? " ✓✓" : ""}</span>`;
+            area.appendChild(b);
+            area.scrollTop = area.scrollHeight;
+          }
+        });
+      }
+    }
+  }
+
+  setInterval(restorePersistentUI, 350);
+})();
