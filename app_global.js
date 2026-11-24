@@ -157,4 +157,78 @@
   setTimeout(startUnifiedLive, 600);
   setInterval(startUnifiedLive, 3000);
 })();
-                               
+     // === AUTO-CREATE & UPDATE REAL CHAT CARDS ON HOME SCREEN ===
+(function () {
+  function upsertHomeChatCard(username, displayName, lastText, timeStr, unread) {
+    const listBox = document.querySelector("#chatList, .chat-list, .chats");
+    if (!listBox) return;
+
+    const cleanUser = (username || "").toLowerCase().replace("@", "").trim();
+    if (!cleanUser) return;
+    const name = displayName || cleanUser;
+    const initial = name.charAt(0).toUpperCase();
+    const cardId = "live_card_" + cleanUser;
+
+    // सेव करना ताकि पेज रिफ्रेश करने पर भी कार्ड बना रहे
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || "user").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const savedKey = "cb_home_cards_" + myUser;
+    const savedCards = JSON.parse(localStorage.getItem(savedKey) || "{}");
+    savedCards[cleanUser] = { username: cleanUser, name, lastText, timeStr, ts: Date.now() };
+    localStorage.setItem(savedKey, JSON.stringify(savedCards));
+
+    let card = document.getElementById(cardId);
+    if (!card) {
+      card = document.createElement("div");
+      card.id = cardId;
+      card.className = "chat-item chat-card";
+      card.style.cssText = "display:flex;align-items:center;justify-content:space-between;background:#111418;padding:14px;border-radius:10px;margin-bottom:10px;cursor:pointer;border:1px solid rgba(255,255,255,0.06);";
+      listBox.prepend(card);
+    } else {
+      listBox.prepend(card); // नया मैसेज आने पर सबसे ऊपर लाना
+    }
+
+    card.onclick = () => {
+      localStorage.setItem("active_chat_user", "@" + cleanUser);
+      localStorage.setItem("active_chat_name", name);
+      location.href = "for.html";
+    };
+
+    card.innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+        <div style="width:46px;height:46px;border-radius:50%;background:#0095f6;color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${initial}</div>
+        <div style="min-width:0;flex:1;">
+          <div style="font-weight:700;font-size:15px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${name}</div>
+          <div style="font-size:13px;color:${unread ? "#25d366" : "#94a3b8"};font-weight:${unread ? "600" : "400"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${lastText || "Tap to start chatting"}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;margin-left:8px;">
+        <span style="font-size:11px;color:#94a3b8;">${timeStr || ""}</span>
+        ${unread ? `<span style="background:#25d366;color:#000;font-size:10px;font-weight:800;padding:2px 7px;border-radius:10px;">NEW</span>` : ""}
+      </div>`;
+  }
+
+  // 1. पहले से सेव किए गए सभी असली दोस्तों के कार्ड लोड करना
+  function loadSavedHomeCards() {
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || "user").toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const savedCards = JSON.parse(localStorage.getItem("cb_home_cards_" + myUser) || "{}");
+    Object.values(savedCards)
+      .sort((a, b) => (a.ts || 0) - (b.ts || 0))
+      .forEach((c) => upsertHomeChatCard(c.username, c.name, c.lastText, c.timeStr, false));
+  }
+
+  // 2. लाइव मैसेज आते ही या रिक्वेस्ट स्वीकार होते ही होम स्क्रीन पर कार्ड बनाना/अपडेट करना
+  function bindHomeCardEvents() {
+    if (!window.socket) return;
+    window.socket.on("receive_private_message", (msg) => {
+      if (!msg || !msg.from) return;
+      upsertHomeChatCard(msg.from, msg.fromName || msg.from, msg.text, msg.time, true);
+    });
+    window.socket.on("follow_request_accepted", (d) => {
+      if (!d || !d.by) return;
+      upsertHomeChatCard(d.by, d.byName || d.by, "Tap to start chatting", "Now", false);
+    });
+  }
+
+  setTimeout(() => { loadSavedHomeCards(); bindHomeCardEvents(); }, 1000);
+})();
+
