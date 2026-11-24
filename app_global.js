@@ -232,3 +232,78 @@
   setTimeout(() => { loadSavedHomeCards(); bindHomeCardEvents(); }, 1000);
 })();
 
+// === BULLETPROOF LIVE & SYNC MESSAGE RECEIVER + HOME CARD ===
+(function () {
+  const seenMsgIds = new Set();
+
+  function handleIncomingMsg(msg) {
+    if (!msg || !msg.from) return;
+    if (msg.id && seenMsgIds.has(msg.id)) return;
+    if (msg.id) seenMsgIds.add(msg.id);
+
+    const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const sender = msg.from.toLowerCase().replace("@", "").trim();
+    if (sender === myUser) return;
+
+    const activeChat = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+
+    // 1. चैट हिस्ट्री सेव करना
+    const histKey = "cb_chat_hist_" + myUser + "_" + sender;
+    const hist = JSON.parse(localStorage.getItem(histKey) || "[]");
+    hist.push({ side: "in", text: msg.text, media: msg.media || null, time: msg.time });
+    localStorage.setItem(histKey, JSON.stringify(hist));
+
+    // 2. होम स्क्रीन के लिए कार्ड सेव करना
+    const savedKey = "cb_home_cards_" + myUser;
+    const savedCards = JSON.parse(localStorage.getItem(savedKey) || "{}");
+    savedCards[sender] = { username: sender, name: msg.fromName || sender, lastText: msg.text, timeStr: msg.time, ts: Date.now() };
+    localStorage.setItem(savedKey, JSON.stringify(savedCards));
+
+    // 3. अगर चैट स्क्रीन (for.html) खुली है तो तुरंत बबल जोड़ना, वरना होम स्क्रीन पर कार्ड व नोटिफिकेशन दिखाना
+    if (window.location.pathname.includes("for.html") && activeChat === sender) {
+      const area = document.querySelector("#chatArea, .chat-area, .chat");
+      if (area) {
+        const b = document.createElement("div");
+        b.className = "msg in";
+        b.style.cssText = "align-self:flex-start;background:var(--card-bg,#ffffff);color:var(--text-main,#111827);padding:7px 11px;border-radius:14px 14px 14px 4px;max-width:78%;margin:4px 0;font-size:14.5px;box-shadow:0 1px 2px rgba(0,0,0,0.14);";
+        b.innerHTML = msg.media
+          ? `<img src="${msg.media}" style="max-width:200px;border-radius:10px;display:block;"><div style="font-size:10px;opacity:0.7;margin-top:3px;">${msg.time}</div>`
+          : `${msg.text} <span style="font-size:10px;opacity:0.65;margin-left:6px;">${msg.time}</span>`;
+        area.appendChild(b);
+        area.scrollTop = area.scrollHeight;
+      }
+    } else {
+      const pop = document.createElement("div");
+      pop.style.cssText = "position:fixed;top:16px;left:12px;right:12px;background:#008069;color:#fff;padding:12px 16px;border-radius:16px;font-size:13.5px;z-index:999999;box-shadow:0 8px 24px rgba(0,0,0,0.3);cursor:pointer;";
+      pop.innerHTML = `💬 <b>${msg.fromName || sender}:</b> ${msg.text}`;
+      pop.onclick = () => {
+        localStorage.setItem("active_chat_user", "@" + sender);
+        localStorage.setItem("active_chat_name", msg.fromName || sender);
+        location.href = "for.html";
+      };
+      document.body.appendChild(pop);
+      setTimeout(() => pop.remove(), 4500);
+    }
+  }
+
+  function keepSyncing() {
+    if (!window.socket) return;
+    const sock = window.socket;
+    const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+    if (!myUser) return;
+
+    sock.emit("register_live_user", { name: myName, username: myUser });
+    sock.emit("sync_my_messages", myUser);
+
+    if (!sock.datasetBoundV3) {
+      sock.datasetBoundV3 = "1";
+      sock.on("receive_private_message", handleIncomingMsg);
+      sock.on("bulk_receive_messages", (arr) => (arr || []).forEach(handleIncomingMsg));
+    }
+  }
+
+  setInterval(keepSyncing, 1500);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) keepSyncing(); });
+})();
