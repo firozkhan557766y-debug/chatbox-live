@@ -9,6 +9,20 @@ const server = http.createServer(app);
 const io = new Server(server, { maxHttpBufferSize: 1e7 });
 
 app.use(express.json());
+app.use((req, res, next) => {
+  if (req.method === "GET" && (req.path === "/" || req.path.endsWith(".html"))) {
+    const fileName = req.path === "/" ? "index.html" : req.path.slice(1);
+    const filePath = path.join(__dirname, fileName);
+    if (fs.existsSync(filePath)) {
+      let html = fs.readFileSync(filePath, "utf8");
+      const injectTags = `\n<script src="/socket.io/socket.io.js"></script>\n<script src="/app_global.js?v=5"></script>\n</body>`;
+      html = html.includes("</body>") ? html.replace("</body>", injectTags) : html + injectTags;
+      return res.type("html").send(html);
+    }
+  }
+  next();
+});
+
 app.use(express.static(path.join(__dirname)));
 
 const DB_FILE = path.join(__dirname, "users.json");
