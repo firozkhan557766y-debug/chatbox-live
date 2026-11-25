@@ -358,12 +358,19 @@ io.on("connection", (socket) => {
       io.to(target.socketId).emit("incoming_follow_request", { from: a, fromName: fromName || a });
     }
   });
+////
+    global.acceptedAlerts = global.acceptedAlerts || {};
 
   socket.on("check_pending_requests", (username) => {
     const u = (username || "").toLowerCase().replace("@", "").trim();
     const list = (global.pendingRequests && global.pendingRequests[u]) || [];
     if (list.length > 0) {
       socket.emit("incoming_follow_request", list[list.length - 1]);
+    }
+    const accList = (global.acceptedAlerts && global.acceptedAlerts[u]) || [];
+    if (accList.length > 0) {
+      accList.forEach((item) => socket.emit("follow_request_accepted", item));
+      global.acceptedAlerts[u] = [];
     }
   });
 
@@ -374,11 +381,15 @@ io.on("connection", (socket) => {
     if (global.pendingRequests && global.pendingRequests[acceptor]) {
       global.pendingRequests[acceptor] = global.pendingRequests[acceptor].filter((r) => r.from !== requester);
     }
+    global.acceptedAlerts[requester] = global.acceptedAlerts[requester] || [];
+    global.acceptedAlerts[requester].push({ by: acceptor, byName: fromName || acceptor });
+
     const reqTarget = global.liveUsers && global.liveUsers[requester];
     if (reqTarget && reqTarget.socketId) {
       io.to(reqTarget.socketId).emit("follow_request_accepted", { by: acceptor, byName: fromName || acceptor });
     }
   });
+  
   
   socket.on("disconnect", () => {
     if (socket.username) delete onlineUsers[socket.username];
