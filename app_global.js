@@ -366,4 +366,26 @@
     }
   }, 400);
 })();
+// === STOP HOME SCREEN CARD FLICKER ===
+(function () {
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      const highest = setInterval(() => {}, 99999);
+      for (let i = 1; i < highest; i++) {
+        clearInterval(i);
+      }
+      // केवल हमारा अपना शांतिपूर्ण सिंक इंजन चालू रखना
+      setInterval(() => {
+        if (typeof io !== "undefined" && window.socket) {
+          const raw = localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || localStorage.getItem("chatbox_name") || "";
+          const me = raw.toLowerCase().replace(/[^a-z0-9_]/g, "");
+          if (me) {
+            window.socket.emit("check_pending_requests", me);
+            window.socket.emit("sync_my_messages", me);
+          }
+        }
+      }, 2000);
+    }, 1200);
+  });
+})();
 
