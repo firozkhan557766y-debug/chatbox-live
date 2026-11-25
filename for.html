@@ -204,17 +204,58 @@
       area.scrollTop = area.scrollHeight;
     }
     // सामने वाले का लाइव मैसेज आते ही असली बबल दिखाना
-    setInterval(() => {
-      if (window.socket && !window.socket._forHtmlRx) {
-        window.socket._forHtmlRx = true;
-        window.socket.on("receive_private_message", (m) => {
-          const activePeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
-          if (m && m.from && m.from.toLowerCase().replace("@", "") === activePeer) {
-            addMsg(m.text, "in");
-          }
-        });
-      }
-    }, 300);
+        // === SAVE & LOAD BOTH-SIDED CHAT HISTORY IN REAL BUBBLES ===
+    (function () {
+      const peerKey = () =>
+        "cb_real_chat_" +
+        (localStorage.getItem("active_chat_user") || "default").toLowerCase().replace("@", "").trim();
+
+      // 1. पहले से सेव किए गए दोनों तरफ के मैसेज चैट खुलते ही बबल में दिखाना
+      window.addEventListener("load", () => {
+        setTimeout(() => {
+          const area = document.getElementById("chatArea");
+          if (!area) return;
+          const saved = JSON.parse(localStorage.getItem(peerKey()) || "[]");
+          saved.forEach((item) => addMsg(item.html, item.side));
+        }, 250);
+      });
+
+      // 2. हर नए भेजे/आए मैसेज को स्थायी रूप से सेव करना
+      const origAddMsg = window.addMsg;
+      window.addMsg = function (html, cls) {
+        const res = origAddMsg.apply(this, arguments);
+        const list = JSON.parse(localStorage.getItem(peerKey()) || "[]");
+        list.push({ html: html, side: cls });
+        localStorage.setItem(peerKey(), JSON.stringify(list));
+        return res;
+      };
+
+      // 3. सामने वाले का लाइव मैसेज आते ही (या पॉप-अप से चैट खुलते ही) असली बबल में दिखाना
+      setInterval(() => {
+        const activePeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+        if (!activePeer) return;
+
+        // यदि पॉप-अप के समय कोई मैसेज cb_final_msgs_ में आया था, उसे तुरंत बबल में लाना
+        const inboxKey = "cb_final_msgs_" + activePeer;
+        const unread = JSON.parse(localStorage.getItem(inboxKey) || "[]");
+        if (unread.length > 0) {
+          unread.forEach((m) => addMsg(m.text, "in"));
+          localStorage.removeItem(inboxKey);
+        }
+
+        if (window.socket && !window.socket._forHtmlRx2) {
+          window.socket._forHtmlRx2 = true;
+          window.socket.on("receive_private_message", (m) => {
+            const curPeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+            if (m && m.from && m.from.toLowerCase().replace("@", "") === curPeer) {
+              addMsg(m.text, "in");
+              localStorage.removeItem("cb_final_msgs_" + curPeer);
+            }
+          });
+        }
+      }, 250);
+    })();
+        
         
     function setupGestures(el) {
       let sx = 0, timer;
