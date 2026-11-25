@@ -473,3 +473,55 @@ setInterval(() => {
     if (e.key === "Enter") pushToKhusbuOrPeer();
   }, true);
 })();
+// === REAL #typeBox (contenteditable) + sendNow() LIVE HOOK ===
+(function () {
+  function hookContentEditableSend() {
+    if (!window.location.pathname.includes("for.html")) return;
+    if (typeof window.sendNow === "function" && !window.sendNow._liveWrapped) {
+      const origSendNow = window.sendNow;
+      window.sendNow = function () {
+        const box = document.getElementById("typeBox");
+        const txt = box ? (box.innerText || box.textContent || "").trim() : "";
+
+        if (txt && typeof io !== "undefined") {
+          const sock = window.socket || (window.socket = io());
+          const myName =
+            localStorage.getItem("chatbox_name") ||
+            localStorage.getItem("userName") ||
+            localStorage.getItem("name") ||
+            "User";
+          const raw =
+            localStorage.getItem("chatbox_username") ||
+            localStorage.getItem("userHandle") ||
+            localStorage.getItem("username") ||
+            myName;
+          const myUser = raw.toLowerCase().replace(/[^a-z0-9_]/g, "");
+
+          const cUserEl = document.getElementById("cUser");
+          const rawPeer =
+            (cUserEl ? cUserEl.innerText : "") ||
+            localStorage.getItem("active_chat_user") ||
+            "";
+          const peer = rawPeer.toLowerCase().replace("@", "").trim();
+          const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+          if (peer && myUser) {
+            sock.emit("register_live_user", { name: myName, username: myUser });
+            sock.emit("private_message", {
+              from: myUser,
+              fromName: myName,
+              to: peer,
+              text: txt,
+              time: t
+            });
+          }
+        }
+
+        return origSendNow.apply(this, arguments);
+      };
+      window.sendNow._liveWrapped = true;
+    }
+  }
+
+  setInterval(hookContentEditableSend, 200);
+})();
