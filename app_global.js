@@ -423,3 +423,53 @@ setInterval(() => {
     }
   }, true);
 })();
+// === FOR.HTML BUILT-IN INPUT & BLUE SEND BUTTON LIVE HOOK ===
+(function () {
+  let liveTyped = "";
+
+  document.addEventListener("input", (e) => {
+    const el = e.target;
+    if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA")) {
+      if ((el.placeholder || "").toLowerCase().includes("search")) return;
+      liveTyped = el.value;
+    }
+  }, true);
+
+  function pushToKhusbuOrPeer() {
+    if (!window.location.pathname.includes("for.html")) return;
+    const inp = document.querySelector("input[placeholder*='Type a message'], input, textarea");
+    const txt = ((inp && inp.value) ? inp.value : liveTyped).trim();
+    if (!txt) return;
+    liveTyped = "";
+
+    const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "Firoz";
+    const raw = localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName;
+    const myUser = raw.toLowerCase().replace(/[^a-z0-9_]/g, "");
+
+    let peer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+    if (!peer) {
+      const m = (document.body.innerText || "").match(/@([a-zA-Z0-9_]+)/);
+      if (m) peer = m.toLowerCase();
+    }
+
+    const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (peer && myUser && typeof io !== "undefined") {
+      const sock = window.socket || (window.socket = io());
+      sock.emit("register_live_user", { name: myName, username: myUser });
+      sock.emit("private_message", { from: myUser, fromName: myName, to: peer, text: txt, time: t });
+    }
+  }
+
+  // चाहे नीला बटन <button> हो, <div> हो या <svg>, टच करते ही सर्वर पर भेजना
+  document.addEventListener("pointerdown", (e) => {
+    if (!window.location.pathname.includes("for.html")) return;
+    const rect = e.target.getBoundingClientRect ? e.target.getBoundingClientRect() : null;
+    if (rect && rect.left > window.innerWidth * 0.75 && rect.top > window.innerHeight * 0.75) {
+      pushToKhusbuOrPeer();
+    }
+  }, true);
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") pushToKhusbuOrPeer();
+  }, true);
+})();
