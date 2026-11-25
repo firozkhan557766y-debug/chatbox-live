@@ -397,4 +397,57 @@
   setInterval(syncRootChat, 200);
 })();
   
+// === LOCK NEW FRIEND CHAT CARDS ABOVE NEHA/KABIR ON HOME SCREEN ===
+(function () {
+  function keepFriendCardsAlive() {
+    if (window.location.pathname.includes("for.html")) return;
+
+    // 1. जहां "Neha Sharma" वाला कार्ड रखा है, ठीक उसी कंटेनर को पकड़ना
+    const allDivs = Array.from(document.querySelectorAll("div"));
+    const nehaTitle = allDivs.find((el) => el.children.length === 0 && (el.innerText || "").trim() === "Neha Sharma");
+    if (!nehaTitle) return;
+
+    // Neha Sharma का मुख्य सफेद कार्ड और उसकी पैरेंट लिस्ट ढूँढना
+    let nehaCard = nehaTitle.parentElement;
+    while (nehaCard && nehaCard.parentElement && nehaCard.offsetHeight < 55) {
+      nehaCard = nehaCard.parentElement;
+    }
+    const listContainer = nehaCard ? nehaCard.parentElement : null;
+    if (!listContainer) return;
+
+    // 2. सेव किए गए सभी दोस्तों के कार्ड्स निकालना
+    const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const savedCards = JSON.parse(localStorage.getItem("cb_home_cards_" + myUser) || "{}");
+
+    Object.values(savedCards).forEach((c) => {
+      if (!c || !c.username) return;
+      const cid = "perm_friend_card_" + c.username;
+      if (document.getElementById(cid)) return;
+
+      const card = document.createElement("div");
+      card.id = cid;
+      card.style.cssText = "display:flex;align-items:center;justify-content:space-between;background:#ffffff;padding:14px 16px;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;";
+      card.onclick = () => {
+        localStorage.setItem("active_chat_user", "@" + c.username);
+        localStorage.setItem("active_chat_name", c.name);
+        location.href = "for.html";
+      };
+
+      const initial = (c.name || "U").charAt(0).toUpperCase();
+      card.innerHTML = `
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
+          <div style="width:46px;height:46px;border-radius:50%;background:#0095f6;color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${initial}</div>
+          <div style="min-width:0;flex:1;">
+            <div style="font-weight:700;font-size:15.5px;color:#0f172a;">${c.name}</div>
+            <div style="font-size:13px;color:#008069;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">✓✓ ${c.lastText || "Tap to chat"}</div>
+          </div>
+        </div>
+        <div style="font-size:11.5px;color:#64748b;margin-left:8px;">${c.timeStr || "Now"}</div>`;
+
+      listContainer.insertBefore(card, nehaCard);
+    });
+  }
+
+  setInterval(keepFriendCardsAlive, 200);
 })();
