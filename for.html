@@ -231,16 +231,24 @@
       };
 
       // 3. सामने वाले का लाइव मैसेज आते ही (या पॉप-अप से चैट खुलते ही) असली बबल में दिखाना
+            // 3. सामने वाले का लाइव मैसेज आते ही (बिना डुप्लीकेट के केवल 1 बार) असली बबल में दिखाना
+      const shownMsgIds = new Set();
       setInterval(() => {
         const activePeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
         if (!activePeer) return;
 
-        // यदि पॉप-अप के समय कोई मैसेज cb_final_msgs_ में आया था, उसे तुरंत बबल में लाना
+        // पॉप-अप के समय आए मैसेज को केवल 1 बार बबल में लाना
         const inboxKey = "cb_final_msgs_" + activePeer;
         const unread = JSON.parse(localStorage.getItem(inboxKey) || "[]");
         if (unread.length > 0) {
-          unread.forEach((m) => addMsg(m.text, "in"));
           localStorage.removeItem(inboxKey);
+          unread.forEach((m) => {
+            const sig = m.id || (m.text + "_" + m.time);
+            if (!shownMsgIds.has(sig)) {
+              shownMsgIds.add(sig);
+              addMsg(m.text, "in");
+            }
+          });
         }
 
         if (window.socket && !window.socket._forHtmlRx2) {
@@ -248,12 +256,17 @@
           window.socket.on("receive_private_message", (m) => {
             const curPeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
             if (m && m.from && m.from.toLowerCase().replace("@", "") === curPeer) {
-              addMsg(m.text, "in");
               localStorage.removeItem("cb_final_msgs_" + curPeer);
+              const sig = m.id || (m.text + "_" + m.time);
+              if (!shownMsgIds.has(sig)) {
+                shownMsgIds.add(sig);
+                addMsg(m.text, "in");
+              }
             }
           });
         }
       }, 250);
+      
     })();
         
         
