@@ -367,6 +367,7 @@
   }, 400);
 })();
 // === STOP HOME SCREEN CARD FLICKER ===
+// === STOP HOME SCREEN CARD FLICKER + AUTO REGISTER NEW USERS ===
 (function () {
   window.addEventListener("load", () => {
     setTimeout(() => {
@@ -374,18 +375,30 @@
       for (let i = 1; i < highest; i++) {
         clearInterval(i);
       }
-      // केवल हमारा अपना शांतिपूर्ण सिंक इंजन चालू रखना
+
+      // हर 2 सेकंड में अपना अकाउंट रजिस्टर + रिक्वेस्ट व मैसेज सिंक रखना
       setInterval(() => {
-        if (typeof io !== "undefined" && window.socket) {
-          const raw = localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || localStorage.getItem("chatbox_name") || "";
+        if (typeof io !== "undefined") {
+          const sock = window.socket || (window.socket = io());
+          const myName =
+            localStorage.getItem("chatbox_name") ||
+            localStorage.getItem("userName") ||
+            localStorage.getItem("name") ||
+            "User";
+          const raw =
+            localStorage.getItem("chatbox_username") ||
+            localStorage.getItem("userHandle") ||
+            localStorage.getItem("username") ||
+            myName;
           const me = raw.toLowerCase().replace(/[^a-z0-9_]/g, "");
+
           if (me) {
-            window.socket.emit("check_pending_requests", me);
-            window.socket.emit("sync_my_messages", me);
+            sock.emit("register_live_user", { name: myName, username: me });
+            sock.emit("check_pending_requests", me);
+            sock.emit("sync_my_messages", me);
           }
         }
       }, 2000);
     }, 1200);
   });
 })();
-
