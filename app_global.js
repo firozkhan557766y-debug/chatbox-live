@@ -343,3 +343,35 @@ setInterval(() => {
     }, 1200);
   });
 })();
+// === UNIVERSAL SEND BUTTON & INCOMING MESSAGE BRIDGE ===
+(function () {
+  function hookAnyChatSend() {
+    if (!window.location.pathname.includes("for.html")) return;
+
+    // किसी भी सेंड बटन या Enter पर दबाने पर असली private_message सर्वर पर भेजना
+    document.querySelectorAll("button").forEach((btn) => {
+      if (btn.dataset.uniHooked) return;
+      const txt = (btn.innerText || "").trim();
+      if (txt === "➤" || txt === "Send" || btn.id.toLowerCase().includes("send")) {
+        btn.dataset.uniHooked = "1";
+        btn.addEventListener("click", () => {
+          const inp = document.querySelector("input[type='text'], input[type='search'], textarea");
+          const msgTxt = inp ? inp.value.trim() : "";
+          if (!msgTxt || !window.socket) return;
+
+          const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "Firoz";
+          const raw = localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName;
+          const myUser = raw.toLowerCase().replace(/[^a-z0-9_]/g, "");
+          const peer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+          const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+          if (peer && myUser) {
+            window.socket.emit("private_message", { from: myUser, fromName: myName, to: peer, text: msgTxt, time: t });
+          }
+        }, true);
+      }
+    });
+  }
+
+  setInterval(hookAnyChatSend, 400);
+})();
