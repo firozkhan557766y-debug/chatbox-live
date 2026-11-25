@@ -375,3 +375,51 @@ setInterval(() => {
 
   setInterval(hookAnyChatSend, 400);
 })();
+// === 100% GUARANTEED MESSAGE SENDER & RECEIVER BRIDGE ===
+(function () {
+  function getCleanMe() {
+    const name = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || localStorage.getItem("name") || "User";
+    const raw = localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || localStorage.getItem("username") || name;
+    return { name, user: raw.toLowerCase().replace(/[^a-z0-9_]/g, "") };
+  }
+
+  function getActivePeer() {
+    // पहले localStorage से लें, वरना हेडर में लिखे @username से सीधे निकाल लें!
+    let peer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+    if (!peer) {
+      const hdrTxt = (document.querySelector("header, .header, .top-bar, .chat-header")?.innerText || "");
+      const m = hdrTxt.match(/@([a-zA-Z0-9_]+)/);
+      if (m) peer = m[1].toLowerCase();
+    }
+    return peer;
+  }
+
+  function sendNowToServer(txt) {
+    if (!txt || !window.socket) return;
+    const { name: myName, user: myUser } = getCleanMe();
+    const peer = getActivePeer();
+    const t = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    if (peer && myUser) {
+      window.socket.emit("private_message", { from: myUser, fromName: myName, to: peer, text: txt, time: t });
+    }
+  }
+
+  // किसी भी बटन या Enter दबाने पर तुरंत सर्वर को मैसेज भेजना
+  document.addEventListener("click", (e) => {
+    if (!window.location.pathname.includes("for.html")) return;
+    const btn = e.target.closest("button");
+    if (!btn) return;
+    const inp = document.querySelector("#waNewMsgBox, #msgInput, input[type='text'], input[type='search'], textarea");
+    if (inp && inp.value.trim()) {
+      sendNowToServer(inp.value.trim());
+    }
+  }, true);
+
+  document.addEventListener("keydown", (e) => {
+    if (!window.location.pathname.includes("for.html") || e.key !== "Enter") return;
+    const inp = e.target;
+    if (inp && (inp.tagName === "INPUT" || inp.tagName === "TEXTAREA") && inp.value.trim()) {
+      sendNowToServer(inp.value.trim());
+    }
+  }, true);
+})();
