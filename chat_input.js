@@ -180,6 +180,8 @@
 
   setInterval(renderMemoryChat, 150);
 })();
-})();
-// === UNBREAKABLE HTML-ROOT MESSAGE LAYER ===
-// === MEMORY-LOCKED UNBREAKABLE CHAT LAYER (NEVER WIPES) ===
+  // === STOP AUTO-RELOAD & SERVICE WORKER CACHE WIPE ===
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+}
+window.onbeforeunload = function () { return null; };
