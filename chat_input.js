@@ -134,10 +134,7 @@
     window.visualViewport.addEventListener("resize", runAllChatFixes);
     window.visualViewport.addEventListener("scroll", runAllChatFixes);
   }
-})();
-// === UNBREAKABLE HTML-ROOT MESSAGE LAYER ===
-// === MEMORY-LOCKED UNBREAKABLE CHAT LAYER (NEVER WIPES) ===
-(function () {
+  function () {
   window._PERM_BUBBLES = window._PERM_BUBBLES || [];
 
   // 1. पहले से सेव किए गए मैसेज एक बार मेमोरी में लोड करना
@@ -183,4 +180,6 @@
 
   setInterval(renderMemoryChat, 150);
 })();
-  
+})();
+// === UNBREAKABLE HTML-ROOT MESSAGE LAYER ===
+// === MEMORY-LOCKED UNBREAKABLE CHAT LAYER (NEVER WIPES) ===
