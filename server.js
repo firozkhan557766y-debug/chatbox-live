@@ -309,29 +309,34 @@ io.on("connection", (socket) => {
   });
     global.offlineMessages = global.offlineMessages || {};
 
-  socket.on("private_message", (data) => {
+    socket.on("private_message", (data) => {
     if (!data || !data.to) return;
     const toUser = data.to.toLowerCase().replace("@", "").trim();
     const fromUser = (data.from || socket.username || "user").toLowerCase().replace("@", "").trim();
+    const msgText = data.text || data.content || data.msg || "";
+    if (!msgText && !data.media) return;
+
     const payload = {
       id: Date.now() + "_" + Math.random().toString(36).slice(2, 6),
       from: fromUser,
       fromName: data.fromName || fromUser,
       to: toUser,
-      text: data.text || "",
+      text: msgText,
+      content: msgText,
       media: data.media || null,
       time: data.time || new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     };
 
-    // सर्वर पर भी सेव करना ताकि बैकग्राउंड टैब खुलते ही तुरंत मिले
     global.offlineMessages[toUser] = global.offlineMessages[toUser] || [];
     global.offlineMessages[toUser].push(payload);
 
     const target = global.liveUsers && global.liveUsers[toUser];
     if (target && target.socketId) {
       io.to(target.socketId).emit("receive_private_message", payload);
+      io.to(target.socketId).emit("private_message", payload);
     }
   });
+  
 
   socket.on("sync_my_messages", (username) => {
     const u = (username || "").toLowerCase().replace("@", "").trim();
