@@ -176,6 +176,17 @@
         : txt;
       cancelRep();
       addMsg(html, "out");
+                  // सर्वर पर सामने वाले को लाइव मैसेज भेजना
+        if (window.socket) {
+          const mName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+          const mUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || mName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+          const toPeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+          const tNow = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+          if (toPeer && mUser) {
+            window.socket.emit("private_message", { from: mUser, fromName: mName, to: toPeer, text: txt, time: tNow });
+          }
+        }
+          
       box.innerText = "";
       if (box.value !== undefined) box.value = "";
     }
@@ -192,7 +203,19 @@
       area.appendChild(d);
       area.scrollTop = area.scrollHeight;
     }
-
+    // सामने वाले का लाइव मैसेज आते ही असली बबल दिखाना
+    setInterval(() => {
+      if (window.socket && !window.socket._forHtmlRx) {
+        window.socket._forHtmlRx = true;
+        window.socket.on("receive_private_message", (m) => {
+          const activePeer = (localStorage.getItem("active_chat_user") || "").toLowerCase().replace("@", "").trim();
+          if (m && m.from && m.from.toLowerCase().replace("@", "") === activePeer) {
+            addMsg(m.text, "in");
+          }
+        });
+      }
+    }, 300);
+        
     function setupGestures(el) {
       let sx = 0, timer;
       el.ontouchstart = e => {
