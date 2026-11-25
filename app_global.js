@@ -278,4 +278,80 @@
     if (!document.hidden) runMainEngine();
   });
 })();
-            
+    // === DIRECT DATABASE API SEARCH (NEVER EMPTY AFTER DEPLOY) ===
+(function () {
+  function renderApiSearchList(users) {
+    const myName = localStorage.getItem("chatbox_name") || localStorage.getItem("userName") || "User";
+    const myUser = (localStorage.getItem("chatbox_username") || localStorage.getItem("userHandle") || myName).toLowerCase().replace(/[^a-z0-9_]/g, "");
+    const sInp = document.querySelector('input[placeholder*="Search"], #searchUser');
+
+    let box = document.getElementById("liveSearchDrop");
+    if (!box) {
+      box = document.createElement("div");
+      box.id = "liveSearchDrop";
+      box.style.cssText = "position:fixed;top:145px;left:12px;right:12px;background:#ffffff;border-radius:14px;box-shadow:0 10px 28px rgba(0,0,0,0.25);z-index:999999;max-height:280px;overflow-y:auto;";
+      document.body.appendChild(box);
+    }
+
+    const others = (users || []).filter((u) => {
+      const uname = (u.username || u.user || "").toLowerCase().replace("@", "");
+      return uname && uname !== myUser;
+    });
+
+    if (!sInp || !sInp.value.trim()) {
+      box.style.display = "none";
+      return;
+    }
+
+    box.style.display = "block";
+    if (!others.length) {
+      box.innerHTML = `<div style="padding:14px;text-align:center;color:#64748b;font-size:13px;">No user found for "${sInp.value.trim()}"</div>`;
+      return;
+    }
+
+    const accepted = JSON.parse(localStorage.getItem("cb_accepted_" + myUser) || "[]");
+    const pending = JSON.parse(localStorage.getItem("cb_pending_" + myUser) || "[]");
+
+    box.innerHTML = others
+      .map((u) => {
+        const uname = (u.username || u.user || "").toLowerCase().replace("@", "");
+        const dname = u.name || uname;
+        const isAcc = accepted.includes(uname);
+        const isPen = pending.includes(uname);
+
+        let btn = `<button onclick="window.doFollowReq('${uname}','${dname}')" style="background:#2563eb;color:#fff;border:none;padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;">+ Follow</button>`;
+        if (isAcc) {
+          btn = `<button onclick="localStorage.setItem('active_chat_user','@${uname}');localStorage.setItem('active_chat_name','${dname}');location.href='for.html';" style="background:#008069;color:#fff;border:none;padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;cursor:pointer;">Message</button>`;
+        } else if (isPen) {
+          btn = `<button disabled style="background:#e2e8f0;color:#475569;border:none;padding:6px 14px;border-radius:16px;font-size:12px;font-weight:600;">Requested ⏳</button>`;
+        }
+
+        return `<div style="padding:12px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;color:#0f172a;">
+          <div><b>${dname}</b> <span style="color:#64748b;font-size:12px;">@${uname}</span></div>
+          ${btn}
+        </div>`;
+      })
+      .join("");
+  }
+
+  setInterval(() => {
+    const sInp = document.querySelector('input[placeholder*="Search"], #searchUser');
+    if (sInp && !sInp.dataset.apiSearchBound) {
+      sInp.dataset.apiSearchBound = "1";
+      sInp.addEventListener("input", async () => {
+        const q = sInp.value.trim();
+        if (!q) {
+          const b = document.getElementById("liveSearchDrop");
+          if (b) b.style.display = "none";
+          return;
+        }
+        try {
+          const res = await fetch("/api/search_users?q=" + encodeURIComponent(q));
+          const data = await res.json();
+          renderApiSearchList(data.users || data || []);
+        } catch (e) {}
+      });
+    }
+  }, 400);
+})();
+
