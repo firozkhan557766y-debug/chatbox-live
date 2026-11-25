@@ -63,8 +63,10 @@
   }
 
   // होम स्क्रीन पर Neha Sharma के ठीक ऊपर नए दोस्तों के कार्ड लॉक रखना
+    // होम स्क्रीन / Direct Message लिस्ट के ऊपर अलग शांत बॉक्स में कार्ड लॉक रखना (0% Flicker)
   function keepFriendCardsAlive() {
     if (window.location.pathname.includes("for.html")) return;
+
     const allDivs = Array.from(document.querySelectorAll("div"));
     const nehaTitle = allDivs.find(
       (el) => el.children.length === 0 && (el.innerText || "").trim() === "Neha Sharma"
@@ -76,27 +78,36 @@
       nehaCard = nehaCard.parentElement;
     }
     const listContainer = nehaCard ? nehaCard.parentElement : null;
-    if (!listContainer) return;
+    if (!listContainer || !listContainer.parentElement) return;
+
+    // पुराने झप-झप करने वाले कंटेनर से बाहर एक अलग शांत बॉक्स बनाना
+    let safeWrap = document.getElementById("cbLockedFriendsWrap");
+    if (!safeWrap) {
+      safeWrap = document.createElement("div");
+      safeWrap.id = "cbLockedFriendsWrap";
+      safeWrap.style.cssText = "width:100%;display:flex;flex-direction:column;";
+      listContainer.parentElement.insertBefore(safeWrap, listContainer);
+    }
 
     const { user: myUser } = getMe();
     const saved = JSON.parse(localStorage.getItem("cb_home_cards_" + myUser) || "{}");
-    Object.values(saved).forEach((c) => {
+    const list = Object.values(saved);
+    const sig = JSON.stringify(list);
+    if (safeWrap.dataset.sig === sig) return; // केवल नया डेटा आने पर ही अपडेट होगा (0% झप-झप!)
+    safeWrap.dataset.sig = sig;
+
+    safeWrap.innerHTML = "";
+    list.forEach((c) => {
       if (!c || !c.username) return;
-      const cid = "perm_friend_card_" + c.username;
-      let card = document.getElementById(cid);
-      if (!card) {
-        card = document.createElement("div");
-        card.id = cid;
-        card.style.cssText =
-          "display:flex;align-items:center;justify-content:space-between;background:#ffffff;padding:14px 16px;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;";
-        card.onclick = () => {
-          localStorage.setItem("active_chat_user", "@" + c.username);
-          localStorage.setItem("active_chat_name", c.name);
-          location.href = "for.html";
-        };
-        listContainer.insertBefore(card, nehaCard);
-      }
-      const nextHtml = `
+      const card = document.createElement("div");
+      card.style.cssText =
+        "display:flex;align-items:center;justify-content:space-between;background:#ffffff;padding:14px 16px;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;";
+      card.onclick = () => {
+        localStorage.setItem("active_chat_user", "@" + c.username);
+        localStorage.setItem("active_chat_name", c.name);
+        location.href = "for.html";
+      };
+      card.innerHTML = `
         <div style="display:flex;align-items:center;gap:12px;min-width:0;flex:1;">
           <div style="width:46px;height:46px;border-radius:50%;background:#0095f6;color:#fff;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${(c.name || "U").charAt(0).toUpperCase()}</div>
           <div style="min-width:0;flex:1;">
@@ -105,9 +116,10 @@
           </div>
         </div>
         <div style="font-size:11.5px;color:#64748b;margin-left:8px;">${c.timeStr}</div>`;
-      if (card.innerHTML !== nextHtml) card.innerHTML = nextHtml;
+      safeWrap.appendChild(card);
     });
-  }
+    }
+  
     function runMainEngine() {
     keepFriendCardsAlive();
     if (typeof io === "undefined" && !window.socket) return;
